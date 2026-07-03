@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extensio Patronus</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div class="header-top">
+          <h1>Extensio Patronus</h1>
+          <button
+            id="openChromeExtensionsBtn"
+            class="icon-btn gear header-settings"
+            type="button"
+            aria-label="Open chrome://extensions"
+            title="Open chrome://extensions"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" stroke="currentColor" stroke-width="1.8"/>
+              <path d="m19 12 .8 1.4-1.2 2.1-1.6-.1a7.8 7.8 0 0 1-1.2 1.2l.1 1.6-2.1 1.2L12 19a7.8 7.8 0 0 1-1.8 0l-.8 1.4-2.1-1.2.1-1.6a7.8 7.8 0 0 1-1.2-1.2l-1.6.1-1.2-2.1L5 12a7.8 7.8 0 0 1 0-1.8l-1.4-.8 1.2-2.1 1.6.1A7.8 7.8 0 0 1 7.6 6l-.1-1.6 2.1-1.2.8 1.4a7.8 7.8 0 0 1 1.8 0l.8-1.4 2.1 1.2-.1 1.6a7.8 7.8 0 0 1 1.2 1.2l1.6-.1 1.2 2.1-1.4.8c.1.6.1 1.2 0 1.8Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p>Invoke the grouping spell in a single click.</p>
+      </header>
+
+      <section class="card group-create">
+        <label for="groupName">New group</label>
+        <div class="inline-form">
+          <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" />
+          <button id="createGroupBtn" type="button">Create</button>
+        </div>
+      </section>
+
+      <section class="card groups">
+        <h2>Groups</h2>
+        <p id="groupsHint" class="meta groups-hint"></p>
+        <div id="groupsList" class="chips"></div>
+      </section>
+
+      <section class="card search">
+        <label for="searchInput">Search extension</label>
+        <input id="searchInput" type="search" placeholder="Extension name or alias" />
+      </section>
+
+      <section class="card">
+        <div class="table-head">
+          <span>Extension</span>
+          <span>Status</span>
+          <span>Group</span>
+          <span>Actions</span>
+        </div>
+        <div id="extensionsList" class="table-body"></div>
+      </section>
+    </main>
+
+    <dialog id="confirmModal" class="modal-dialog" aria-labelledby="confirmTitle">
+      <div class="modal-panel">
+        <h2 id="confirmTitle">Delete group</h2>
+        <p id="confirmText">This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button id="cancelDeleteBtn" class="btn-ghost" type="button">Cancel</button>
+          <button id="confirmDeleteBtn" class="btn-danger" type="button">Delete</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
