@@ -1,40 +1,44 @@
-# Extensiones Hub (Chrome MV3)
+# Extensio Patronus (Chrome MV3)
 
-Hub para reducir saturación en barra: mantienes solo este icono fijado y gestionas tus otras extensiones desde su popup.
+Extension management hub. Keep only this icon pinned and manage your other extensions from its popup.
 
-## Lo que sí hace
+## What it does
 
-- Crea grupos personalizados (Trabajo, Dev, IA, etc.)
-- Lista extensiones instaladas
-- Asigna cada extensión a un grupo
-- Busca por nombre
-- Activa/Desactiva extensión (API `chrome.management`)
-- Abre página de opciones de extensión (si existe)
+- Create custom groups (Work, Dev, AI, etc.)
+- List installed extensions
+- Assign each extension to a group
+- Search by name
+- Enable/Disable extension (via `chrome.management` API)
+- Open extension options page (if available)
 
-## Límites de Chrome API (importante)
+## Chrome API Limitations
 
-- No existe API para fijar/desfijar otras extensiones por código.
-- No existe API para abrir popup de otra extensión desde tu extensión.
-- El popup del icono de una extensión se abre por click, no por hover.
+- There is no API to pin/unpin other extensions via code.
+- There is no API to open another extension's popup from your extension.
+- An extension icon popup only opens on click, not on hover.
 
-## Instalación local
-
-1. Abre `chrome://extensions/`
-2. Activa **Modo desarrollador**
-3. Click en **Cargar descomprimida**
-4. Selecciona carpeta `extensiones-hub`
-5. Fija solo **Extensiones Hub** en barra
-6. Desfija manualmente el resto que quieras compactar
-
-## Estructura
+## Structure
 
 - `manifest.json`
-- `popup/popup.html`
-- `popup/popup.css`
-- `popup/popup.js`
+- `popup/`
+  - `popup.html`
+  - `popup.css`
+  - `popup.js`
+- `icons/`
 
-## Permisos usados
+## Local Installation
 
-- `management`: leer extensiones y activarlas/desactivarlas
-- `storage`: guardar grupos y asignaciones
-- `tabs`: abrir páginas de opciones
+1. Open `chrome://extensions/`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select the `extensio-patronus` folder
+5. Pin only **Extensio Patronus** on the toolbar
+6. Manually unpin the rest of the extensions you want to compact
+
+## Permissions Used
+
+- `management`: read extensions and enable/disable them
+- `storage`: save groups and assignments
+- `tabs`: open options pages
+
+> This extension is under development and is not yet available in the Chrome Web Store.

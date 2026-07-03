@@ -4,7 +4,7 @@ A collection of Google Chrome extensions built on **Manifest V3**.
 
 ## Included Extensions
 
-### [Crop & Convert](/crop-and-convert)
+### [Crop & Convert](crop-and-convert)
 
 Lightweight image processing tool. Crop images to 1:1 or 16:9 and convert JPG/PNG to **WEBP**, individually or in batch.
 
