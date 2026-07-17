@@ -429,6 +429,10 @@ refs.groupsList.addEventListener("click", async (event) => {
   if (!bulkBtn) return;
 
   const scope = bulkBtn.dataset.bulkToggle;
+  await toggleGroupExtensions(scope);
+});
+
+async function toggleGroupExtensions(scope) {
   let targetExtensions = installedExtensions;
 
   if (scope !== "all") {
@@ -439,7 +443,7 @@ refs.groupsList.addEventListener("click", async (event) => {
   await safeToggleMany(targetExtensions, shouldEnable);
   await reloadExtensionsOnly();
   renderAll();
-});
+}
 
 async function safeToggleOne(extension) {
   const targetState = !extension.enabled;
@@ -492,6 +496,22 @@ function showStatus(message) {
 }
 
 function handleGlobalShortcuts(event) {
+  if (event.ctrlKey && event.key >= "1" && event.key <= "9") {
+    event.preventDefault();
+    const digit = Number.parseInt(event.key, 10);
+
+    if (digit === 1) {
+      toggleGroupExtensions("all");
+      return;
+    }
+
+    const groupIndex = digit - 2;
+    if (groupIndex >= 0 && groupIndex < state.groups.length) {
+      toggleGroupExtensions(state.groups[groupIndex].id);
+    }
+    return;
+  }
+
   if (event.key === "/" && !isEditableTarget(event.target)) {
     event.preventDefault();
     refs.searchInput.focus();

@@ -42,11 +42,6 @@
       <section class="card groups">
         <h2>Groups</h2>
         <p class="section-desc">Click a group to filter. Use the power button to toggle all extensions in a group.</p>
-        <div class="power-legend">
-          <span class="legend-dot on">All enabled</span>
-          <span class="legend-dot mixed">Partial</span>
-          <span class="legend-dot off">All disabled</span>
-        </div>
         <p id="groupsHint" class="meta groups-hint"></p>
         <div id="groupsList" class="chips"></div>
       </section>
@@ -75,6 +70,27 @@
         <div id="extensionsList" class="table-body"></div>
       </section>
     </main>
+
+    <footer class="info-footer">
+      <div class="info-block">
+        <h3>Shortcuts</h3>
+        <div class="shortcut-grid">
+          <div><kbd>/</kbd> Focus search</div>
+          <div><kbd>Esc</kbd> Clear filters</div>
+          <div><kbd>Ctrl+1</kbd> Toggle all</div>
+          <div><kbd>Ctrl+2&#8230;9</kbd> Toggle groups 1&#8211;8</div>
+          <div><kbd>Dbl click</kbd> Edit alias</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <h3>Power colors</h3>
+        <div class="power-legend">
+          <span class="legend-dot on">All enabled</span>
+          <span class="legend-dot mixed">Partial</span>
+          <span class="legend-dot off">All disabled</span>
+        </div>
+      </div>
+    </footer>
 
     <dialog id="confirmModal" class="modal-dialog" aria-labelledby="confirmTitle">
       <div class="modal-panel">
