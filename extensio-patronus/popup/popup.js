@@ -301,6 +301,11 @@ function applySort(list) {
       if (a.enabled === b.enabled) return a.name.localeCompare(b.name, "en");
       return a.enabled ? -1 : 1;
     });
+  } else if (sortMode === "disabled-first") {
+    list.sort((a, b) => {
+      if (a.enabled === b.enabled) return a.name.localeCompare(b.name, "en");
+      return a.enabled ? 1 : -1;
+    });
   } else {
     list.sort((a, b) => a.name.localeCompare(b.name, "en"));
   }
