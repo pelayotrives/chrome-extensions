@@ -1,6 +1,9 @@
 const STORAGE_KEY = "hubState";
 
 const refs = {
+  saveSnapshotBtn: document.getElementById("saveSnapshotBtn"),
+  snapshotLimitHint: document.getElementById("snapshotLimitHint"),
+  snapshotsList: document.getElementById("snapshotsList"),
   createGroupBtn: document.getElementById("createGroupBtn"),
   groupName: document.getElementById("groupName"),
   groupsList: document.getElementById("groupsList"),
@@ -19,10 +22,12 @@ let installedExtensions = [];
 let state = {
   groups: [],
   assignments: {},
-  aliases: {}
+  aliases: {},
+  snapshots: []
 };
 let activeGroupFilter = "all";
 let pendingDeleteGroupId = null;
+let pendingDeleteSnapshotId = null;
 let statusTimeoutId = null;
 let sortMode = "az";
 
@@ -53,6 +58,7 @@ async function init() {
 }
 
 function wireEvents() {
+  refs.saveSnapshotBtn.addEventListener("click", handleSaveSnapshot);
   refs.createGroupBtn.addEventListener("click", handleCreateGroup);
   refs.searchInput.addEventListener("input", renderExtensionRows);
   refs.sortOrder.addEventListener("change", () => {
@@ -80,36 +86,44 @@ function wireEvents() {
     if (!group) return;
 
     pendingDeleteGroupId = group.id;
-    refs.confirmText.textContent = `Delete group "${group.name}" and clear related assignments?`;
+    pendingDeleteSnapshotId = null;
+    refs.confirmText.textContent = `Delete group "${group.name}" and clear related assignments? This action cannot be undone.`;
     refs.confirmModal.showModal();
   });
 
   refs.cancelDeleteBtn.addEventListener("click", closeDeleteModal);
 
   refs.confirmDeleteBtn.addEventListener("click", async () => {
-    if (!pendingDeleteGroupId) {
-      closeDeleteModal();
+    const deletingGroup = pendingDeleteGroupId;
+    const deletingSnapshot = pendingDeleteSnapshotId;
+
+    pendingDeleteGroupId = null;
+    pendingDeleteSnapshotId = null;
+    closeDeleteModal();
+
+    if (deletingSnapshot) {
+      state.snapshots = state.snapshots.filter((item) => item.id !== deletingSnapshot);
+      await saveState();
+      renderAll();
       return;
     }
 
-    const groupId = pendingDeleteGroupId;
-    pendingDeleteGroupId = null;
-    closeDeleteModal();
+    if (deletingGroup) {
+      state.groups = state.groups.filter((group) => group.id !== deletingGroup);
 
-    state.groups = state.groups.filter((group) => group.id !== groupId);
-
-    for (const [extensionId, assignedGroupId] of Object.entries(state.assignments)) {
-      if (assignedGroupId === groupId) {
-        delete state.assignments[extensionId];
+      for (const [extensionId, assignedGroupId] of Object.entries(state.assignments)) {
+        if (assignedGroupId === deletingGroup) {
+          delete state.assignments[extensionId];
+        }
       }
-    }
 
-    if (activeGroupFilter === groupId) {
-      activeGroupFilter = "all";
-    }
+      if (activeGroupFilter === deletingGroup) {
+        activeGroupFilter = "all";
+      }
 
-    await saveState();
-    renderAll();
+      await saveState();
+      renderAll();
+    }
   });
 
   refs.confirmModal.addEventListener("click", (event) => {
@@ -171,6 +185,35 @@ function wireEvents() {
 
     startAliasEdit(name, extension);
   });
+
+  refs.snapshotsList.addEventListener("click", async (event) => {
+    const restoreBtn = event.target.closest("button[data-restore-snapshot]");
+    if (restoreBtn) {
+      await handleRestoreSnapshot(restoreBtn.dataset.restoreSnapshot);
+      return;
+    }
+
+    const deleteBtn = event.target.closest("button[data-delete-snapshot]");
+    if (deleteBtn) {
+      const snapshotId = deleteBtn.dataset.deleteSnapshot;
+      const snapshot = state.snapshots.find((item) => item.id === snapshotId);
+      if (!snapshot) return;
+
+      pendingDeleteGroupId = null;
+      pendingDeleteSnapshotId = snapshotId;
+      refs.confirmText.textContent = `Delete snapshot "${snapshot.name}"? This action cannot be undone.`;
+      refs.confirmModal.showModal();
+    }
+  });
+
+  refs.snapshotsList.addEventListener("dblclick", (event) => {
+    const snapName = event.target.closest(".snap-name[data-rename-snapshot]");
+    if (!snapName) return;
+
+    const snapshotId = snapName.dataset.renameSnapshot;
+    const snapshot = state.snapshots.find((item) => item.id === snapshotId);
+    if (snapshot) startSnapshotRename(snapName, snapshot);
+  });
 }
 
 async function handleCreateGroup() {
@@ -190,6 +233,104 @@ async function handleCreateGroup() {
   refs.groupName.value = "";
   await saveState();
   renderAll();
+}
+
+async function handleSaveSnapshot() {
+  if (state.snapshots.length >= 9) return;
+
+  const index = state.snapshots.length + 1;
+
+  const extensionStates = {};
+  for (const ext of installedExtensions) {
+    extensionStates[ext.id] = ext.enabled;
+  }
+
+  state.snapshots.push({
+    id: crypto.randomUUID(),
+    name: `Snapshot ${index}`,
+    groups: state.groups.map((g) => ({ id: g.id, name: g.name })),
+    assignments: { ...state.assignments },
+    aliases: { ...state.aliases },
+    extensionStates
+  });
+
+  await saveState();
+  renderAll();
+}
+
+async function handleRestoreSnapshot(snapshotId) {
+  const snapshot = state.snapshots.find((item) => item.id === snapshotId);
+  if (!snapshot) return;
+
+  state.groups = snapshot.groups.map((g) => ({ id: g.id, name: g.name }));
+  state.assignments = { ...snapshot.assignments };
+  state.aliases = { ...snapshot.aliases };
+
+  const setEnabledOps = [];
+  for (const [extId, targetEnabled] of Object.entries(snapshot.extensionStates)) {
+    const ext = installedExtensions.find((item) => item.id === extId);
+    if (!ext) continue;
+    if (ext.enabled !== targetEnabled) {
+      setEnabledOps.push(
+        chrome.management.setEnabled(extId, targetEnabled).catch(() => {})
+      );
+    }
+  }
+
+  await Promise.allSettled(setEnabledOps);
+  await saveState();
+  await reloadExtensionsOnly();
+  renderAll();
+}
+
+function startSnapshotRename(nameNode, snapshot) {
+  const input = document.createElement("input");
+  input.className = "alias-input";
+  input.type = "text";
+  input.maxLength = 32;
+  input.value = snapshot.name;
+
+  nameNode.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+
+  const commit = async () => {
+    if (done) return;
+    done = true;
+
+    const value = input.value.trim();
+    if (value) {
+      snapshot.name = value;
+    }
+
+    await saveState();
+    renderSnapshots();
+  };
+
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    renderSnapshots();
+  };
+
+  input.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      await commit();
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancel();
+    }
+  });
+
+  input.addEventListener("blur", () => {
+    commit().catch((error) => {
+      console.error("Snapshot rename failed", error);
+    });
+  });
 }
 
 async function loadData() {
@@ -223,7 +364,11 @@ function normalizeState(maybeState) {
   return {
     groups: validGroups,
     assignments: sanitizeAssignments(rawAssignments, extensionIds, groupIds),
-    aliases: sanitizeAliases(rawAliases, extensionIds)
+    aliases: sanitizeAliases(rawAliases, extensionIds),
+    snapshots: sanitizeSnapshots(
+      Array.isArray(maybeState?.snapshots) ? maybeState.snapshots : [],
+      extensionIds
+    )
   };
 }
 
@@ -273,6 +418,54 @@ function sanitizeAliases(rawAliases, extensionIds) {
   return result;
 }
 
+function sanitizeSnapshots(rawSnapshots, extensionIds) {
+  const MAX_SNAPSHOTS = 9;
+  const seen = new Set();
+  const result = [];
+
+  for (const snap of rawSnapshots) {
+    if (result.length >= MAX_SNAPSHOTS) break;
+    if (!isValidSnapshotShape(snap) || seen.has(snap.id)) continue;
+
+    seen.add(snap.id);
+
+    const validGroups = sanitizeGroups(snap.groups);
+    const groupIds = new Set(validGroups.map((g) => g.id));
+    const rawAliases = snap.aliases && typeof snap.aliases === "object" ? snap.aliases : {};
+    const cleanExtStates = filterExtensionStates(snap.extensionStates, extensionIds);
+
+    result.push({
+      id: snap.id,
+      name: snap.name.slice(0, 32).trim() || "Snapshot",
+      groups: validGroups,
+      assignments: sanitizeAssignments(snap.assignments, extensionIds, groupIds),
+      aliases: sanitizeAliases(rawAliases, extensionIds),
+      extensionStates: cleanExtStates
+    });
+  }
+
+  return result;
+}
+
+function isValidSnapshotShape(snap) {
+  return snap
+    && typeof snap.id === "string"
+    && typeof snap.name === "string"
+    && Array.isArray(snap.groups)
+    && snap.assignments && typeof snap.assignments === "object"
+    && snap.extensionStates && typeof snap.extensionStates === "object";
+}
+
+function filterExtensionStates(rawStates, extensionIds) {
+  const clean = {};
+  for (const [extId, enabled] of Object.entries(rawStates)) {
+    if (extensionIds.has(extId) && typeof enabled === "boolean") {
+      clean[extId] = enabled;
+    }
+  }
+  return clean;
+}
+
 async function reloadExtensionsOnly() {
   const all = await chrome.management.getAll();
   installedExtensions = all
@@ -312,8 +505,35 @@ function applySort(list) {
 }
 
 function renderAll() {
+  renderSnapshots();
   renderGroups();
   renderExtensionRows();
+}
+
+function renderSnapshots() {
+  refs.snapshotsList.innerHTML = "";
+
+  const atMax = state.snapshots.length >= 9;
+  refs.saveSnapshotBtn.disabled = atMax;
+  refs.snapshotLimitHint.classList.toggle("hidden", !atMax);
+
+  if (!state.snapshots.length) {
+    refs.snapshotsList.innerHTML = "<p class=\"snap-empty\">No snapshots saved yet.</p>";
+    return;
+  }
+
+  for (const snap of state.snapshots) {
+    const row = document.createElement("div");
+    row.className = "snap-row";
+    row.innerHTML = `
+      <span class="snap-name" data-rename-snapshot="${snap.id}" title="Double click to rename">${escapeHtml(snap.name)}</span>
+      <button class="icon-btn" data-restore-snapshot="${snap.id}" type="button" aria-label="Restore ${escapeHtml(snap.name)}" title="Restore">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M1 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 14.5A9 9 0 1 0 2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="chip-delete" data-delete-snapshot="${snap.id}" type="button" aria-label="Delete snapshot ${escapeHtml(snap.name)}">X</button>
+    `;
+    refs.snapshotsList.append(row);
+  }
 }
 
 function renderGroups() {
@@ -621,6 +841,7 @@ function closeDeleteModal() {
     refs.confirmModal.close();
   }
   pendingDeleteGroupId = null;
+  pendingDeleteSnapshotId = null;
 }
 
 async function openBestPageForExtension(extension) {

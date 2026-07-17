@@ -30,6 +30,16 @@
         <p>Invoke the grouping spell in a single click.</p>
       </header>
 
+      <section class="card snapshots">
+        <h2>Snapshots</h2>
+        <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
+        <div class="snapshot-actions">
+          <button id="saveSnapshotBtn" type="button">Save current state</button>
+          <span id="snapshotLimitHint" class="snapshot-limit-hint hidden">Max 9 snapshots</span>
+        </div>
+        <div id="snapshotsList" class="snapshot-list"></div>
+      </section>
+
       <section class="card group-create">
         <h2>New group</h2>
         <p class="section-desc">Create custom groups to organize your extensions.</p>
