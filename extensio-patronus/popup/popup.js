@@ -6,6 +6,7 @@ const refs = {
   groupsList: document.getElementById("groupsList"),
   groupsHint: document.getElementById("groupsHint"),
   searchInput: document.getElementById("searchInput"),
+  sortOrder: document.getElementById("sortOrder"),
   openChromeExtensionsBtn: document.getElementById("openChromeExtensionsBtn"),
   extensionsList: document.getElementById("extensionsList"),
   confirmModal: document.getElementById("confirmModal"),
@@ -23,6 +24,7 @@ let state = {
 let activeGroupFilter = "all";
 let pendingDeleteGroupId = null;
 let statusTimeoutId = null;
+let sortMode = "az";
 
 const POWER_ICON = `
 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -53,6 +55,10 @@ async function init() {
 function wireEvents() {
   refs.createGroupBtn.addEventListener("click", handleCreateGroup);
   refs.searchInput.addEventListener("input", renderExtensionRows);
+  refs.sortOrder.addEventListener("change", () => {
+    sortMode = refs.sortOrder.value;
+    renderExtensionRows();
+  });
   refs.openChromeExtensionsBtn.addEventListener("click", async () => {
     await chrome.tabs.create({ url: "chrome://extensions/" });
   });
@@ -280,6 +286,26 @@ async function saveState() {
   });
 }
 
+function getPowerClass(total, enabledCount) {
+  if (total === 0) return "off";
+  if (enabledCount === total) return "on";
+  if (enabledCount === 0) return "off";
+  return "mixed";
+}
+
+function applySort(list) {
+  if (sortMode === "za") {
+    list.sort((a, b) => b.name.localeCompare(a.name, "en"));
+  } else if (sortMode === "enabled-first") {
+    list.sort((a, b) => {
+      if (a.enabled === b.enabled) return a.name.localeCompare(b.name, "en");
+      return a.enabled ? -1 : 1;
+    });
+  } else {
+    list.sort((a, b) => a.name.localeCompare(b.name, "en"));
+  }
+}
+
 function renderAll() {
   renderGroups();
   renderExtensionRows();
@@ -289,14 +315,15 @@ function renderGroups() {
   refs.groupsList.innerHTML = "";
 
   const allCount = installedExtensions.length;
-  const allEnabled = installedExtensions.length > 0 && installedExtensions.every((item) => item.enabled);
+  const allEnabledCount = installedExtensions.filter((item) => item.enabled).length;
+  const allPowerClass = getPowerClass(allCount, allEnabledCount);
   const allChip = document.createElement("div");
   allChip.className = "chip single";
   allChip.innerHTML = `
     <button class="chip-filter ${activeGroupFilter === "all" ? "active" : ""}" data-filter-group="all" type="button">
       All (${allCount})
     </button>
-    <button class="chip-bulk icon-btn power ${allEnabled ? "on" : "off"}" data-bulk-toggle="all" type="button" aria-label="Toggle all extensions" title="Toggle all">
+    <button class="chip-bulk icon-btn power ${allPowerClass}" data-bulk-toggle="all" type="button" aria-label="Toggle all extensions" title="Toggle all">
       ${POWER_ICON}
     </button>
   `;
@@ -305,7 +332,8 @@ function renderGroups() {
   for (const group of state.groups) {
     const groupExtensions = installedExtensions.filter((item) => state.assignments[item.id] === group.id);
     const count = groupExtensions.length;
-    const allInGroupEnabled = count > 0 && groupExtensions.every((item) => item.enabled);
+    const enabledCount = groupExtensions.filter((item) => item.enabled).length;
+    const powerClass = getPowerClass(count, enabledCount);
 
     const chip = document.createElement("div");
     chip.className = "chip";
@@ -313,7 +341,7 @@ function renderGroups() {
       <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" type="button">
         ${escapeHtml(group.name)} (${count})
       </button>
-      <button class="chip-bulk icon-btn power ${allInGroupEnabled ? "on" : "off"}" data-bulk-toggle="${group.id}" type="button" aria-label="Toggle ${escapeHtml(group.name)} extensions" title="Toggle group">
+      <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-toggle="${group.id}" type="button" aria-label="Toggle ${escapeHtml(group.name)} extensions" title="Toggle group">
         ${POWER_ICON}
       </button>
       <button class="chip-delete" data-delete-group="${group.id}" type="button" aria-label="Delete group ${escapeHtml(group.name)}">X</button>
@@ -336,6 +364,8 @@ function renderExtensionRows() {
     if (activeGroupFilter === "all") return true;
     return state.assignments[item.id] === activeGroupFilter;
   });
+
+  applySort(visible);
 
   refs.extensionsList.innerHTML = "";
 
