@@ -6,6 +6,53 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [1.2.1]
+
+### Added
+
+- **Info tab**: explains how to use the extension (getting started steps, shortcuts, power color legend).
+- **Extension count per snapshot**: each snapshot row shows "X of Y enabled" below its name.
+- **Toast warning** when trying to save a 10th snapshot.
+
+### Changed
+
+- **Tab order**: Groups now appears first, Snapshots second, Info third.
+- **Restore icon**: replaced the curved arrow with a simple checkmark for clarity.
+- **Shortcuts and legend** moved from the footer into the Info tab; footer removed.
+
+### Fixed
+
+- Symbols replaced throughout the UI.
+- Shortcut labels clarified: "Toggle all extensions" (Ctrl+1), "Toggle groups 1-8" (Ctrl+2..9).
+
+---
+
+## [1.2.0]
+
+### Added
+
+- **Snapshots**: save and restore the full extension state (groups, assignments, aliases, on/off status). Up to 9 snapshots. Rename via double-click, delete with confirmation modal.
+- **Tabs**: "Snapshots" and "Groups" tabs split the popup into two focused views, reducing vertical scroll.
+- **Toast notifications**: non-intrusive confirmation messages for create/delete/toggle/restore actions. Auto-dismiss after 2 s.
+- **Ctrl+1…9 shortcuts**: toggle all extensions (`Ctrl+1`) or any of the first 8 groups (`Ctrl+2` through `Ctrl+9`).
+- **Power color legend** in the footer explaining green/orange/red indicators.
+- **Sort dropdown** next to search: A–Z, Z–A, Enabled first, Disabled first.
+- **Extension logo** next to the header title.
+
+### Changed
+
+- **Color palette**: neutral grays (`#0d0d0d` / `#1a1a1a` / `#e0e0e0`) with a subtle blue accent (`#6b8fa3`). Color used sparingly for highlights only.
+- Section titles unified to same size, weight, and color across all cards.
+- Descriptive help text added under each section heading.
+- Delete confirmation modal now adapts its title ("Delete group" / "Delete snapshot") depending on context.
+- Footer moved below the main content as a distinct info block with shortcuts and legend.
+
+### Fixed
+
+- Stored state sanitization now covers snapshots as well as groups, assignments, and aliases.
+
+---
+
 ## [1.1.0]
 
 ### Added

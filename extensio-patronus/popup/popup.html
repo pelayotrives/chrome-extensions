@@ -30,81 +30,107 @@
         <p>Invoke the grouping spell in a single click.</p>
       </header>
 
-      <section class="card snapshots">
-        <h2>Snapshots</h2>
-        <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
-        <div class="snapshot-actions">
-          <button id="saveSnapshotBtn" type="button">Save current state</button>
-          <span id="snapshotLimitHint" class="snapshot-limit-hint hidden">Max 9 snapshots</span>
-        </div>
-        <div id="snapshotsList" class="snapshot-list"></div>
+      <nav class="tab-bar">
+        <button class="tab active" data-tab="groups" type="button">Groups</button>
+        <button class="tab" data-tab="snapshots" type="button">Snapshots</button>
+        <button class="tab" data-tab="info" type="button">Info</button>
+      </nav>
+
+      <section id="tabGroups" class="tab-panel">
+        <section class="card group-create">
+          <h2>New group</h2>
+          <p class="section-desc">Create custom groups to organize your extensions.</p>
+          <div class="inline-form">
+            <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
+            <button id="createGroupBtn" type="button">Create</button>
+          </div>
+        </section>
+
+        <section class="card groups">
+          <h2>Groups</h2>
+          <p class="section-desc">Click a group to filter. Use the power button to toggle all extensions in a group.</p>
+          <p id="groupsHint" class="meta groups-hint"></p>
+          <div id="groupsList" class="chips"></div>
+        </section>
+
+        <section class="card search">
+          <h2>Search extension</h2>
+          <p class="section-desc">Filter extensions by name or alias. Sort to reorder the list.</p>
+          <div class="search-row">
+            <input id="searchInput" type="search" placeholder="Extension name or alias" aria-label="Search extensions" />
+            <select id="sortOrder" class="sort-select" aria-label="Sort order">
+              <option value="az">A – Z</option>
+              <option value="za">Z – A</option>
+              <option value="enabled-first">Enabled first</option>
+              <option value="disabled-first">Disabled first</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="table-head">
+            <span>Extension</span>
+            <span>Status</span>
+            <span>Group</span>
+            <span>Actions</span>
+          </div>
+          <div id="extensionsList" class="table-body"></div>
+        </section>
       </section>
 
-      <section class="card group-create">
-        <h2>New group</h2>
-        <p class="section-desc">Create custom groups to organize your extensions.</p>
-        <div class="inline-form">
-          <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
-          <button id="createGroupBtn" type="button">Create</button>
-        </div>
+      <section id="tabSnapshots" class="tab-panel hidden">
+        <section class="card snapshots">
+          <h2>Snapshots</h2>
+          <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
+          <div class="snapshot-actions">
+            <button id="saveSnapshotBtn" type="button">Save current state</button>
+            <span id="snapshotLimitHint" class="snapshot-limit-hint hidden">Max 9 snapshots</span>
+          </div>
+          <div id="snapshotsList" class="snapshot-list"></div>
+        </section>
       </section>
 
-      <section class="card groups">
-        <h2>Groups</h2>
-        <p class="section-desc">Click a group to filter. Use the power button to toggle all extensions in a group.</p>
-        <p id="groupsHint" class="meta groups-hint"></p>
-        <div id="groupsList" class="chips"></div>
-      </section>
+      <section id="tabInfo" class="tab-panel hidden">
+        <section class="card info">
+          <h2>About Extensio Patronus</h2>
+          <p class="section-desc">Your extension management hub. Group, control, and snapshot your extensions. All from one compact popup.</p>
 
-      <section class="card search">
-        <h2>Search extension</h2>
-        <p class="section-desc">Filter extensions by name or alias. Sort to reorder the list.</p>
-        <div class="search-row">
-          <input id="searchInput" type="search" placeholder="Extension name or alias" aria-label="Search extensions" />
-          <select id="sortOrder" class="sort-select" aria-label="Sort order">
-            <option value="az">A – Z</option>
-            <option value="za">Z – A</option>
-            <option value="enabled-first">Enabled first</option>
-            <option value="disabled-first">Disabled first</option>
-          </select>
-        </div>
-      </section>
+          <div class="info-block">
+            <h3>Getting started</h3>
+            <ol class="info-steps">
+              <li><strong>Create groups</strong> - Organize extensions by context (Work, Dev, AI, etc.).</li>
+              <li><strong>Assign extensions</strong> - Use the dropdown in each row to place an extension into a group.</li>
+              <li><strong>Toggle groups</strong> - Click the power button on any group chip to enable/disable all its extensions at once.</li>
+              <li><strong>Snapshots</strong> - Save your current state (groups, assignments, on/off) and restore it later.</li>
+            </ol>
+          </div>
 
-      <section class="card">
-        <div class="table-head">
-          <span>Extension</span>
-          <span>Status</span>
-          <span>Group</span>
-          <span>Actions</span>
-        </div>
-        <div id="extensionsList" class="table-body"></div>
+          <div class="info-block">
+            <h3>Shortcuts</h3>
+            <div class="shortcut-grid">
+              <div><kbd>/</kbd> Focus search</div>
+              <div><kbd>Esc</kbd> Clear filters</div>
+              <div><kbd>Ctrl+1</kbd> Toggle all extensions</div>
+              <div><kbd>Ctrl+2..9</kbd> Toggle groups 1-8</div>
+              <div><kbd>Dbl click</kbd> Edit alias / rename</div>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <h3>Power colors</h3>
+            <div class="power-legend">
+              <span class="legend-dot on">All enabled</span>
+              <span class="legend-dot mixed">Partial</span>
+              <span class="legend-dot off">All disabled</span>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
 
-    <footer class="info-footer">
-      <div class="info-block">
-        <h3>Shortcuts</h3>
-        <div class="shortcut-grid">
-          <div><kbd>/</kbd> Focus search</div>
-          <div><kbd>Esc</kbd> Clear filters</div>
-          <div><kbd>Ctrl+1</kbd> Toggle all</div>
-          <div><kbd>Ctrl+2&#8230;9</kbd> Toggle groups 1&#8211;8</div>
-          <div><kbd>Dbl click</kbd> Edit alias</div>
-        </div>
-      </div>
-      <div class="info-block">
-        <h3>Power colors</h3>
-        <div class="power-legend">
-          <span class="legend-dot on">All enabled</span>
-          <span class="legend-dot mixed">Partial</span>
-          <span class="legend-dot off">All disabled</span>
-        </div>
-      </div>
-    </footer>
-
     <dialog id="confirmModal" class="modal-dialog" aria-labelledby="confirmTitle">
       <div class="modal-panel">
-        <h2 id="confirmTitle">Delete group</h2>
+        <h2 id="confirmTitle">Delete</h2>
         <p id="confirmText">This action cannot be undone.</p>
         <div class="modal-actions">
           <button id="cancelDeleteBtn" class="btn-ghost" type="button">Cancel</button>
@@ -112,6 +138,8 @@
         </div>
       </div>
     </dialog>
+
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="popup.js" type="module"></script>
   </body>
