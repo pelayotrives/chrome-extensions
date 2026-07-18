@@ -74,6 +74,10 @@ try {
   console.error("Init failed", error);
 }
 
+function renderSupergroups() {
+  return renderSupergroupsImpl();
+}
+
 async function init() {
   await loadData();
   wireEvents();
@@ -1125,7 +1129,7 @@ function renderGroups() {
   refs.groupsHint.textContent = "";
 }
 
-function renderSupergroups() {
+function renderSupergroupsImpl() {
   if (!refs.supergroupsList || !refs.createSupergroupBtn || !refs.supergroupForm) return;
 
   refs.supergroupsList.innerHTML = "";

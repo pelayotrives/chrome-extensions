@@ -6,6 +6,20 @@ This project now tracks releases as patch-only versions, with the newest entry f
 
 ---
 
+## [0.0.10]
+
+### Changed
+
+- Supergroup empty state now uses a centered dashed placeholder style with muted section-subtitle typography.
+
+### Fixed
+
+- Restored the new snapshot shine animation after the import-flow styling regressions.
+- Fixed the import overlay spinner layout so the progress ring stays centered inside a proper modal overlay instead of spilling across tabs.
+- Hardened `renderSupergroups()` exposure so Chrome no longer throws runtime `ReferenceError` failures during popup init, imports, drag and drop, or assignment flows.
+
+---
+
 ## [0.0.9]
 
 ### Added
