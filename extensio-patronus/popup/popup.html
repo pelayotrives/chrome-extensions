@@ -30,13 +30,13 @@
         <p>Invoke the grouping spell in a single click.</p>
       </header>
 
-      <nav class="tab-bar">
-        <button class="tab active" data-tab="groups" type="button">Groups</button>
-        <button class="tab" data-tab="snapshots" type="button">Snapshots</button>
-        <button class="tab" data-tab="settings" type="button">Settings</button>
+      <nav class="tab-bar" role="tablist" aria-label="Popup sections">
+        <button id="tabButtonGroups" class="tab active" data-tab="groups" type="button" role="tab" aria-selected="true" aria-controls="tabGroups">Groups</button>
+        <button id="tabButtonSnapshots" class="tab" data-tab="snapshots" type="button" role="tab" aria-selected="false" aria-controls="tabSnapshots">Snapshots</button>
+        <button id="tabButtonSettings" class="tab" data-tab="settings" type="button" role="tab" aria-selected="false" aria-controls="tabSettings">Settings</button>
       </nav>
 
-      <section id="tabGroups" class="tab-panel">
+      <section id="tabGroups" class="tab-panel" role="tabpanel" aria-labelledby="tabButtonGroups">
         <section class="card groups">
           <h2>Groups</h2>
           <p class="section-desc">Create custom groups to organize your extensions. Click a group to filter, use the power button to toggle all its extensions.</p>
@@ -44,7 +44,7 @@
             <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
             <button id="createGroupBtn" type="button">Create</button>
           </div>
-          <p id="groupsHint" class="meta groups-hint"></p>
+          <p id="groupsHint" class="meta groups-hint" role="status" aria-live="polite" aria-atomic="true"></p>
           <div id="groupsList" class="chips"></div>
         </section>
 
@@ -84,19 +84,18 @@
         </section>
       </section>
 
-      <section id="tabSnapshots" class="tab-panel hidden">
+      <section id="tabSnapshots" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabButtonSnapshots">
         <section class="card snapshots">
           <h2>Snapshots</h2>
           <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
           <div class="snapshot-actions">
             <button id="saveSnapshotBtn" type="button">Save current state</button>
-            <span id="snapshotLimitHint" class="snapshot-limit-hint hidden">Max 9 snapshots</span>
           </div>
           <div id="snapshotsList" class="snapshot-list"></div>
         </section>
       </section>
 
-      <section id="tabSettings" class="tab-panel hidden">
+      <section id="tabSettings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabButtonSettings">
         <section class="card info">
           <h2>Settings</h2>
           <p class="section-desc">Export your groups, supergroups, assignments and aliases as JSON. Import a file to restore them. Extensions not installed on this machine are safely ignored during import.</p>
@@ -111,6 +110,7 @@
             <ol class="info-steps">
               <li><strong>Create groups</strong> to match your workflows. Call them Work, Dev, AI, Writing, whatever fits.</li>
               <li><strong>Assign each extension</strong> to a group using the dropdown next to its name, or drag and drop it onto a group chip.</li>
+              <li><strong>Right click a supergroup</strong> to enter edit mode and add or remove groups inside it.</li>
               <li><strong>Toggle groups instantly</strong> with the power button. One click disables everything you don't need right now.</li>
               <li><strong>Snapshots</strong> let you freeze a full extension state and jump back to it later. Perfect for switching contexts.</li>
             </ol>
@@ -124,6 +124,7 @@
               <div><kbd>Ctrl+1</kbd> Toggle all extensions</div>
               <div><kbd>Ctrl+2..9</kbd> Toggle groups 1-8</div>
               <div><kbd>Dbl click</kbd> Edit alias / rename</div>
+              <div><kbd>Right click</kbd> Edit supergroup groups</div>
               <div><kbd>Drag row</kbd> Drop on chip to assign</div>
             </div>
           </div>
@@ -136,9 +137,11 @@
               <span class="legend-dot off">All disabled</span>
             </div>
           </div>
-
           <div class="info-block">
-            <p class="info-footnote">Extensio Patronus <span id="versionLabel">v...</span>. No data leaves your browser.</p>
+            <p class="info-footnote">
+              <span>Extensio Patronus <span id="versionLabel">v...</span>. No data leaves your browser.</span>
+              <span class="info-footnote-sub">Made by Pelayo Trives · All rights reserved.</span>
+            </p>
           </div>
         </section>
       </section>
@@ -155,7 +158,7 @@
       </div>
     </dialog>
 
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" aria-live="off"></div>
 
     <script src="popup.js" type="module"></script>
   </body>

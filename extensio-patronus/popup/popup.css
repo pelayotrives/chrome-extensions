@@ -138,11 +138,11 @@ body {
 
 .card.info .info-block h3 {
   margin: 0 0 4px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .info-steps {
@@ -169,6 +169,11 @@ body {
   font-size: 10px;
   color: var(--muted);
   text-align: center;
+}
+
+.info-footnote-sub {
+  display: block;
+  margin-top: 3px;
 }
 
 .search-row {
@@ -214,6 +219,27 @@ body {
   border-radius: 5px;
   background: var(--panel-2);
   border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+.snap-row-new::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 34%,
+    rgba(255, 255, 255, 0.04) 42%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.08) 58%,
+    transparent 66%,
+    transparent 100%
+  );
+  transform: translateX(-140%);
+  animation: snap-shine 1.35s cubic-bezier(0.22, 0.05, 0.2, 1) forwards;
+  pointer-events: none;
 }
 
 .snap-btn {
@@ -309,6 +335,30 @@ button:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.empty-state {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--line-2);
+  background:
+    linear-gradient(180deg, rgba(107, 143, 163, 0.08), rgba(107, 143, 163, 0.02)),
+    var(--panel-2);
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty-state-text {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .groups-hint {
@@ -640,6 +690,21 @@ button:hover {
   }
 }
 
+@keyframes snap-shine {
+  0% {
+    transform: translateX(-140%);
+  }
+  14% {
+    transform: translateX(-132%);
+  }
+  72% {
+    transform: translateX(108%);
+  }
+  100% {
+    transform: translateX(140%);
+  }
+}
+
 .modal-panel {
   width: 100%;
   max-width: 340px;
@@ -797,6 +862,48 @@ button:hover {
   pointer-events: auto;
 }
 
+.toast-limit {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  background: rgba(180, 40, 40, 0.92);
+  border-color: rgba(220, 60, 60, 0.5);
+  animation: toast-in-top 0.2s ease-out, toast-out-top 0.25s ease-in 2.2s forwards;
+}
+
+.toast-success,
+.toast-danger {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  animation: toast-in-top 0.2s ease-out, toast-out-top 0.25s ease-in 2s forwards;
+}
+
+.toast-success {
+  background: rgba(20, 120, 60, 0.94);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.toast-danger {
+  background: rgba(180, 40, 40, 0.92);
+  border-color: rgba(220, 60, 60, 0.5);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -816,5 +923,27 @@ button:hover {
   to {
     opacity: 0;
     transform: translateY(8px);
+  }
+}
+
+@keyframes toast-in-top {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes toast-out-top {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
   }
 }

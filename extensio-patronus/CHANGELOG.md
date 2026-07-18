@@ -2,168 +2,188 @@
 
 All notable changes to Extensio Patronus are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+This project now tracks releases as patch-only versions, with the newest entry first for easier maintenance.
 
 ---
 
-## [1.3.0]
+## [0.0.9]
 
 ### Added
 
-- **Supergroups**: group multiple groups together and toggle all their extensions at once. Create, delete (with confirmation modal), rename (double click), and filter (single click shows only contained groups and extensions).
-- **Group rename**: double click any group chip to edit its name inline.
-- **Settings tab**: replaces the old Info tab. Includes export (download groups, supergroups, assignments and aliases as JSON) and import (restore from a file; extensions not installed are safely ignored).
-- **Snapshot flash effect**: a brief screen flash animation on save, similar to a macOS screenshot capture.
-- **Modal backdrop blur**: confirmation dialogs now apply a slight blur to the background.
+- Freeform group and supergroup usage with only a 9-snapshot cap.
+- Red top toast for snapshot-limit attempts.
+- Success and danger top toasts for create, delete, import, export, enable, disable, assign, and error flows.
+- Right-click supergroup edit mode using the existing form.
+- Toast when entering supergroup edit mode.
+- Snapshot shine animation on the newly created snapshot row.
+- Micro empty states for groups and supergroups.
+- Commercial README, dedicated privacy policy, restrictive license file, and store listing copy pack.
 
 ### Changed
 
-- **Tab renamed**: "Info" is now "Settings".
-- Delete confirmation modal now handles all three entity types: groups, snapshots, and supergroups.
-- Escape key also clears active supergroup filter.
-- Supergroup chip layout matches groups (no extra summary row).
+- Extension is now fully free and no longer shows licensing or plan UI.
+- Footer authorship and rights messaging refined.
+- `How it works` and `Keyboard shortcuts` headings now match the Settings heading style.
+- Manifest description updated for store readiness.
+- Snapshot shine animation slowed down and eased more naturally.
+- Changelog versioning reset to patch-only release history.
 
 ### Fixed
 
-- Supergroup form spacing now consistent with other sections.
-- Checkboxes replaced with chip-style toggles in the supergroup creation form.
+- License tab rendering issues removed by removing the entire licensing flow.
+- Snapshot save flow now shows the limit toast instead of a persistent inline limit hint.
+- Group tooltip now mentions both filtering and renaming.
+- Supergroup tooltip now documents filtering, renaming, and right-click editing together.
+- Tabs now expose better ARIA state with `role="tab"` / `role="tabpanel"` semantics.
+- Toasts now expose `role`, `aria-live`, and `aria-atomic` attributes for assistive technologies.
+- Inline status text for group-related messages is now announced politely.
 
 ---
 
-## [1.2.4]
+## [0.0.8]
 
 ### Added
 
-- **Drag and drop**: drag an extension row onto a group chip to assign it instantly.
-- **Supergroups**: group several groups together and toggle them all at once. Each supergroup shows the number of contained groups and extensions.
+- Mature supergroup workflow with create, delete, rename, filter, and bulk toggle.
+- Settings tab replacing the old Info tab.
+- Export and import of groups, supergroups, assignments, and aliases as JSON.
+- Snapshot flash effect and modal backdrop blur.
 
 ### Changed
 
-- Drag & drop info added to the Info tab shortcuts list.
+- Delete confirmation now handles groups, snapshots, and supergroups.
+- Escape also clears active supergroup filters.
+- Supergroup chips aligned visually with group chips.
+
+### Fixed
+
+- Supergroup form spacing and chip-based selection cleanup.
+
+---
+
+## [0.0.7]
+
+### Added
+
+- Drag and drop assignment from extension rows onto groups.
+- First supergroup implementation.
+
+### Changed
+
+- Drag and drop guidance added to the help content.
 
 ### Removed
 
-- "Drop here to remove group" zone (use the dropdown to unassign instead).
+- Group removal drop zone.
 
 ---
 
-## [1.2.3]
+## [0.0.6]
 
 ### Changed
 
-- **Cards merged**: "New group" and "Groups" unified into a single card; "Search extension" and the extensions table merged into an "Extensions" card.
-- Spacing standardized across all form rows, snapshot actions, and snapshot list items.
+- Group creation and list layout merged into one cleaner card.
+- Search and extension table layout tightened into a unified section.
+- Spacing standardized across forms, snapshots, and lists.
 
 ---
 
-## [1.2.2]
-
-### Changed
-
-- **Info tab rewritten** with a more natural tone: "How it works" steps explain the why behind each feature.
-- Steps body text uses muted gray; only the bold labels stay white for contrast.
-- List markers dimmed to muted instead of accent blue.
-- "Partial" legend label changed to "Some on, some off" for clarity.
-- Section headings renamed: "Getting started" to "How it works", "Shortcuts" to "Keyboard shortcuts".
+## [0.0.5]
 
 ### Added
 
-- **Version footnote** at the bottom of Info: reads from `manifest.json` at runtime so it always stays in sync.
+- Runtime version footnote sourced from `manifest.json`.
+
+### Changed
+
+- Info content rewritten with a more natural, clearer tone.
+- Steps styling softened so labels stand out more cleanly.
+- `Getting started` renamed to `How it works`.
+- `Shortcuts` renamed to `Keyboard shortcuts`.
 
 ### Removed
 
-- Static version string and "Chrome MV3" label from the Info footnote.
-- `.version` file (version lives in `manifest.json` only).
+- Static version text and the old Chrome MV3 footer wording.
 
 ---
 
-## [1.2.1]
+## [0.0.4]
 
 ### Added
 
-- **Info tab**: explains how to use the extension (getting started steps, shortcuts, power color legend).
-- **Extension count per snapshot**: each snapshot row shows "X of Y enabled" below its name.
-- **Toast warning** when trying to save a 10th snapshot.
+- Info tab with usage guidance, shortcuts, and legend.
+- Snapshot rows showing enabled extension counts.
+- Limit warning when trying to create too many snapshots.
 
 ### Changed
 
-- **Tab order**: Groups now appears first, Snapshots second, Info third.
-- **Restore icon**: replaced the curved arrow with a simple checkmark for clarity.
-- **Shortcuts and legend** moved from the footer into the Info tab; footer removed.
+- Tab order updated so `Groups` comes first.
+- Restore icon simplified.
+- Shortcuts and legend moved into the info area.
 
 ### Fixed
 
-- Symbols replaced throughout the UI.
-- Shortcut labels clarified: "Toggle all extensions" (Ctrl+1), "Toggle groups 1-8" (Ctrl+2..9).
+- Shortcut labels clarified.
+- UI symbol cleanup across the popup.
 
 ---
 
-## [1.2.0]
+## [0.0.3]
 
 ### Added
 
-- **Snapshots**: save and restore the full extension state (groups, assignments, aliases, on/off status). Up to 9 snapshots. Rename via double-click, delete with confirmation modal.
-- **Tabs**: "Snapshots" and "Groups" tabs split the popup into two focused views, reducing vertical scroll.
-- **Toast notifications**: non-intrusive confirmation messages for create/delete/toggle/restore actions. Auto-dismiss after 2 s.
-- **Ctrl+1…9 shortcuts**: toggle all extensions (`Ctrl+1`) or any of the first 8 groups (`Ctrl+2` through `Ctrl+9`).
-- **Power color legend** in the footer explaining green/orange/red indicators.
-- **Sort dropdown** next to search: A–Z, Z–A, Enabled first, Disabled first.
-- **Extension logo** next to the header title.
+- Snapshots to save and restore complete extension setups.
+- Split popup tabs for `Groups` and `Snapshots`.
+- Toast notifications for key actions.
+- Sorting options next to search.
+- Footer legend and extension logo in the UI.
 
 ### Changed
 
-- **Color palette**: neutral grays (`#0d0d0d` / `#1a1a1a` / `#e0e0e0`) with a subtle blue accent (`#6b8fa3`). Color used sparingly for highlights only.
-- Section titles unified to same size, weight, and color across all cards.
-- Descriptive help text added under each section heading.
-- Delete confirmation modal now adapts its title ("Delete group" / "Delete snapshot") depending on context.
-- Footer moved below the main content as a distinct info block with shortcuts and legend.
+- Neutral dark visual theme with a restrained accent color.
+- More consistent section titles and help text.
+- Delete confirmation adapts to group and snapshot context.
 
 ### Fixed
 
-- Stored state sanitization now covers snapshots as well as groups, assignments, and aliases.
+- Snapshot data included in stored state sanitization.
 
 ---
 
-## [1.1.0]
+## [0.0.2]
 
 ### Added
 
-- **Extension aliases**: double-click an extension name to assign a custom alias (max 48 characters). The alias visually replaces the original name in the table and is also searchable.
-- **Bulk toggle per group**: each group chip includes a power button that enables or disables _all_ extensions assigned to that group.
-- **Global bulk toggle ("All")**: the "All" chip also includes a toggle button affecting every installed extension.
-- **Keyboard shortcuts**:
-  - `/` : focuses the search input.
-  - `Escape` : clears the search query and active group filter, or closes the confirmation modal.
-- **Visual status indicator**: green dot with `pulse` animation for enabled extensions; static red dot for disabled ones.
-- **Confirmation modal** when deleting a group, warning that the action cannot be undone.
-- **Open `chrome://extensions`** via the gear icon in the header.
-- **Extension icon** in each row (uses the 16px icon or the closest available size; gradient fallback if none).
-- **Temporary status messages** (e.g. "This extension cannot be disabled", "X extension toggle(s) were blocked by Chrome") that auto-dismiss after 2.6 s.
-- **Full dark theme** with CSS custom properties: backgrounds `#0f1115` / `#171b23`, blue accent `#3b82f6`, monospaced typography.
-- **Inline SVG icons** for power and gear buttons (no external dependencies).
+- Extension aliases with double-click rename.
+- Bulk toggle per group.
+- Global `All` bulk toggle.
+- Keyboard shortcuts for search, filter clearing, and quick toggles.
+- Visual enabled and disabled status dots.
+- Delete confirmation modal.
+- Header shortcut to `chrome://extensions`.
+- Extension icons in each row.
+- Temporary inline status messages.
 
 ### Changed
 
-- Completely redesigned UI from the initial prototype: two-column layout with header, group creation, filter chips, and an extension table with search.
-- State (groups, assignments, aliases) is persisted in `chrome.storage.local` under the `hubState` key.
+- Full UI redesign into the current popup-driven management flow.
+- Local state persistence in `chrome.storage.local`.
 
 ### Fixed
 
-- Stored state validation and sanitization: removes duplicate groups, orphaned assignments (uninstalled extension or deleted group), and invalid aliases on load.
+- Stored state validation and sanitization for groups, assignments, and aliases.
 
 ---
 
-## [1.0.0]
+## [0.0.1]
 
 ### Added
 
-- **Initial release** of Extensio Patronus (Chrome MV3).
-- **Group management**: create, list, and delete custom groups (Work, Dev, AI, etc.).
-- **Installed extension listing** via `chrome.management.getAll()`, filtering out the extension itself.
-- **Assign extensions to groups** through a per-row `<select>` dropdown.
-- **Search** by extension name or alias.
-- **Enable/disable extensions** individually with `chrome.management.setEnabled`.
-- **Open extension options pages** (fallback: `homepageUrl` → `chrome://extensions/?id=`).
-- **Permissions requested**: `management`, `storage`, `tabs`.
-- **Icons in 5 sizes** (16, 32, 48, 128, 512) + editable SVG.
-- **README** with local installation instructions and Chrome API limitation docs.
+- Initial release of Extensio Patronus for Chrome MV3.
+- Group management: create, list, and delete custom groups.
+- Installed extension listing via `chrome.management.getAll()`.
+- Per-extension group assignment with a dropdown.
+- Search by extension name.
+- Individual enable and disable controls.
+- Open extension options or fallback extension pages.
+- Base icons, manifest, and local installation docs.

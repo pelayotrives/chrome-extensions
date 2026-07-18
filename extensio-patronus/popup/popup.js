@@ -26,6 +26,8 @@ const refs = {
   supergroupsList: document.getElementById("supergroupsList")
 };
 
+const MAX_SNAPSHOTS = 9;
+
 let installedExtensions = [];
 let state = {
   groups: [],
@@ -36,6 +38,8 @@ let state = {
 };
 let activeGroupFilter = "all";
 let activeSupergroupFilter = null;
+let editingSupergroupId = null;
+let highlightedSnapshotId = null;
 let sgClickTimer = null;
 let groupClickTimer = null;
 let pendingDeleteGroupId = null;
@@ -130,13 +134,20 @@ function wireEvents() {
     await saveState();
     renderGroups();
     renderExtensionRows();
-    showToast(groupId ? "Extension assigned to group" : "Extension removed from group");
+    showToast(
+      groupId ? "Extension assigned to group" : "Extension removed from group",
+      groupId ? "success" : "danger"
+    );
   });
 
   refs.createSupergroupBtn.addEventListener("click", () => {
     const form = refs.supergroupForm;
     const visible = form.style.display !== "none";
+    editingSupergroupId = null;
     form.style.display = visible ? "none" : "block";
+    if (!visible) {
+      refs.supergroupName.value = "";
+    }
     renderSupergroups();
   });
 
@@ -153,16 +164,28 @@ function wireEvents() {
     const groupIds = [...activeChips].map((c) => c.dataset.sgGroup);
     if (!groupIds.length) return;
 
-    state.supergroups.push({
-      id: crypto.randomUUID(),
-      name,
-      groupIds
-    });
+    if (editingSupergroupId) {
+      const sg = state.supergroups.find((item) => item.id === editingSupergroupId);
+      if (!sg) return;
+      sg.name = name;
+      sg.groupIds = groupIds;
+    } else {
+      state.supergroups.push({
+        id: crypto.randomUUID(),
+        name,
+        groupIds
+      });
+    }
 
+    const toastMessage = editingSupergroupId
+      ? `Supergroup "${name}" updated`
+      : `Supergroup "${name}" created`;
+    editingSupergroupId = null;
+    refs.supergroupName.value = "";
     refs.supergroupForm.style.display = "none";
     await saveState();
     renderSupergroups();
-    showToast(`Supergroup "${name}" created`);
+    showToast(toastMessage, "success");
   });
 
   refs.supergroupsList.addEventListener("click", async (event) => {
@@ -201,6 +224,23 @@ function wireEvents() {
       refs.confirmText.textContent = `Delete supergroup "${sg.name}"? This action cannot be undone.`;
       refs.confirmModal.showModal();
     }
+  });
+
+  refs.supergroupsList.addEventListener("contextmenu", (event) => {
+    const editBtn = event.target.closest("button[data-rename-supergroup]");
+    if (!editBtn) return;
+
+    event.preventDefault();
+    const sg = state.supergroups.find((item) => item.id === editBtn.dataset.renameSupergroup);
+    if (!sg) return;
+
+    editingSupergroupId = sg.id;
+    refs.supergroupForm.style.display = "block";
+    refs.supergroupName.value = sg.name;
+    renderSupergroups();
+    refs.supergroupName.focus();
+    refs.supergroupName.select();
+    showToast(`Editing supergroup "${sg.name}"`, "success");
   });
 
   refs.openChromeExtensionsBtn.addEventListener("click", async () => {
@@ -251,9 +291,14 @@ function wireEvents() {
     if (deletingSupergroup) {
       const sgName = state.supergroups.find((s) => s.id === deletingSupergroup)?.name || "Supergroup";
       state.supergroups = state.supergroups.filter((s) => s.id !== deletingSupergroup);
+      if (editingSupergroupId === deletingSupergroup) {
+        editingSupergroupId = null;
+        refs.supergroupName.value = "";
+        refs.supergroupForm.style.display = "none";
+      }
       await saveState();
       renderAll();
-      showToast(`Supergroup "${sgName}" deleted`);
+      showToast(`Supergroup "${sgName}" deleted`, "danger");
       return;
     }
 
@@ -262,7 +307,7 @@ function wireEvents() {
       state.snapshots = state.snapshots.filter((item) => item.id !== deletingSnapshot);
       await saveState();
       renderAll();
-      showToast(`Snapshot "${snapName}" deleted`);
+      showToast(`Snapshot "${snapName}" deleted`, "danger");
       return;
     }
 
@@ -287,7 +332,7 @@ function wireEvents() {
 
       await saveState();
       renderAll();
-      showToast(`Group "${groupName}" deleted`);
+      showToast(`Group "${groupName}" deleted`, "danger");
     }
   });
 
@@ -480,12 +525,12 @@ async function handleCreateGroup() {
   refs.groupName.value = "";
   await saveState();
   renderAll();
-  showToast(`Group "${rawName}" created`);
+  showToast(`Group "${rawName}" created`, "success");
 }
 
 async function handleSaveSnapshot() {
-  if (state.snapshots.length >= 9) {
-    showToast("Maximum of 9 snapshots reached.");
+  if (state.snapshots.length >= MAX_SNAPSHOTS) {
+    showSnapshotLimitToast();
     return;
   }
 
@@ -498,8 +543,10 @@ async function handleSaveSnapshot() {
 
   const name = `Snapshot ${index}`;
 
+  const snapshotId = crypto.randomUUID();
+
   state.snapshots.push({
-    id: crypto.randomUUID(),
+    id: snapshotId,
     name,
     groups: state.groups.map((g) => ({ id: g.id, name: g.name })),
     assignments: { ...state.assignments },
@@ -508,8 +555,9 @@ async function handleSaveSnapshot() {
   });
 
   await saveState();
+  highlightedSnapshotId = snapshotId;
   renderAll();
-  showToast(`Snapshot "${name}" saved`);
+  showToast(`Snapshot "${name}" saved`, "success");
   triggerFlash();
 }
 
@@ -536,7 +584,7 @@ async function handleRestoreSnapshot(snapshotId) {
   await saveState();
   await reloadExtensionsOnly();
   renderAll();
-  showToast(`Snapshot "${snapshot.name}" restored`);
+  showToast(`Snapshot "${snapshot.name}" restored`, "success");
 }
 
 function startSnapshotRename(nameNode, snapshot) {
@@ -604,7 +652,7 @@ function handleExportConfig() {
   a.download = "extensio-patronus-config.json";
   a.click();
   URL.revokeObjectURL(url);
-  showToast("Configuration exported");
+  showToast("Configuration exported", "success");
 }
 
 async function handleImportConfig() {
@@ -640,9 +688,9 @@ async function handleImportConfig() {
     }
     await saveState();
     renderAll();
-    showToast("Configuration imported");
+    showToast("Configuration imported", "success");
   } catch {
-    showToast("Invalid configuration file");
+    showToast("Invalid configuration file", "danger");
   }
   fileInput.value = "";
 }
@@ -754,7 +802,6 @@ function sanitizeAliases(rawAliases, extensionIds) {
 }
 
 function sanitizeSnapshots(rawSnapshots, extensionIds) {
-  const MAX_SNAPSHOTS = 9;
   const seen = new Set();
   const result = [];
 
@@ -841,10 +888,13 @@ function applySort(list) {
 
 function switchTab(tabId) {
   document.querySelectorAll(".tab").forEach((t) => {
-    t.classList.toggle("active", t.dataset.tab === tabId);
+    const isActive = t.dataset.tab === tabId;
+    t.classList.toggle("active", isActive);
+    t.setAttribute("aria-selected", isActive ? "true" : "false");
   });
   document.querySelectorAll(".tab-panel").forEach((p) => {
-    p.classList.toggle("hidden", p.id !== "tab" + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+    const isActive = p.id === "tab" + tabId.charAt(0).toUpperCase() + tabId.slice(1);
+    p.classList.toggle("hidden", !isActive);
   });
 
   if (tabId === "groups") {
@@ -853,6 +903,8 @@ function switchTab(tabId) {
     renderExtensionRows();
   } else if (tabId === "snapshots") {
     renderSnapshots();
+  } else if (tabId === "settings") {
+    // nothing to render
   }
 }
 
@@ -864,13 +916,9 @@ function renderAll() {
 }
 
 function renderSnapshots() {
-  if (!refs.snapshotsList || !refs.saveSnapshotBtn || !refs.snapshotLimitHint) return;
+  if (!refs.snapshotsList || !refs.saveSnapshotBtn) return;
 
   refs.snapshotsList.innerHTML = "";
-
-  const atMax = state.snapshots.length >= 9;
-  refs.saveSnapshotBtn.disabled = atMax;
-  refs.snapshotLimitHint.classList.toggle("hidden", !atMax);
 
   if (!state.snapshots.length) {
     refs.snapshotsList.innerHTML = "<p class=\"snap-empty\">No snapshots saved yet.</p>";
@@ -881,7 +929,7 @@ function renderSnapshots() {
     const totalExts = Object.keys(snap.extensionStates).length;
     const enabledExts = Object.values(snap.extensionStates).filter((v) => v === true).length;
     const row = document.createElement("div");
-    row.className = "snap-row";
+    row.className = `snap-row ${snap.id === highlightedSnapshotId ? "snap-row-new" : ""}`.trim();
     row.innerHTML = `
       <div class="snap-info">
         <span class="snap-name" data-rename-snapshot="${snap.id}" title="Double click to rename">${escapeHtml(snap.name)}</span>
@@ -894,6 +942,8 @@ function renderSnapshots() {
     `;
     refs.snapshotsList.append(row);
   }
+
+  highlightedSnapshotId = null;
 }
 
 function renderGroups() {
@@ -923,6 +973,30 @@ function renderGroups() {
   `;
   refs.groupsList.append(allChip);
 
+  if (!state.groups.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.innerHTML = `
+      <p class="empty-state-title">No groups yet</p>
+      <p class="empty-state-text">Create your first group to organize extensions by workflow, then drag extensions onto it or assign them from the dropdown.</p>
+    `;
+    refs.groupsList.append(empty);
+    refs.groupsHint.textContent = "";
+    return;
+  }
+
+  if (!visibleGroups.length && activeSupergroupFilter) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.innerHTML = `
+      <p class="empty-state-title">No groups in this supergroup</p>
+      <p class="empty-state-text">Edit the supergroup to add groups, or clear the filter to see every group again.</p>
+    `;
+    refs.groupsList.append(empty);
+    refs.groupsHint.textContent = "";
+    return;
+  }
+
   for (const group of visibleGroups) {
     const groupExtensions = installedExtensions.filter((item) => state.assignments[item.id] === group.id);
     const count = groupExtensions.length;
@@ -933,7 +1007,7 @@ function renderGroups() {
     chip.className = "chip";
     chip.dataset.dropGroup = group.id;
     chip.innerHTML = `
-      <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" data-rename-group="${group.id}" title="Double click to rename" type="button">
+      <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" data-rename-group="${group.id}" title="Click to filter, double click to rename" type="button">
         ${escapeHtml(group.name)} (${count})
       </button>
       <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-toggle="${group.id}" type="button" aria-label="Toggle ${escapeHtml(group.name)} extensions" title="Toggle group">
@@ -945,7 +1019,7 @@ function renderGroups() {
     refs.groupsList.append(chip);
   }
 
-  refs.groupsHint.textContent = state.groups.length ? "" : "No groups yet. Create one to begin.";
+  refs.groupsHint.textContent = "";
 }
 
 function renderSupergroups() {
@@ -954,12 +1028,38 @@ function renderSupergroups() {
   refs.supergroupsList.innerHTML = "";
 
   const visible = refs.supergroupForm.style.display !== "none";
+  const editingSupergroup = editingSupergroupId
+    ? state.supergroups.find((item) => item.id === editingSupergroupId) || null
+    : null;
   refs.createSupergroupBtn.textContent = visible ? "Cancel" : "New supergroup";
+  refs.confirmSupergroupBtn.textContent = editingSupergroup ? "Save" : "Create";
 
   if (visible && state.groups.length) {
     refs.supergroupOptions.innerHTML = state.groups.map((g) =>
-      `<button class="sg-chip" data-sg-group="${g.id}" type="button">${escapeHtml(g.name)}</button>`
+      `<button class="sg-chip ${editingSupergroup?.groupIds.includes(g.id) ? "active" : ""}" data-sg-group="${g.id}" type="button">${escapeHtml(g.name)}</button>`
     ).join("");
+  } else if (visible) {
+    refs.supergroupOptions.innerHTML = "";
+  }
+
+  if (!state.groups.length) {
+    refs.supergroupsList.innerHTML = `
+      <div class="empty-state">
+        <p class="empty-state-title">No groups available yet</p>
+        <p class="empty-state-text">Create at least one group first. Then you will be able to combine groups into a supergroup for one-click toggles.</p>
+      </div>
+    `;
+    return;
+  }
+
+  if (!state.supergroups.length) {
+    refs.supergroupsList.innerHTML = `
+      <div class="empty-state">
+        <p class="empty-state-title">No supergroups yet</p>
+        <p class="empty-state-text">Bundle several groups together so you can enable, disable, or filter whole setups with a single click.</p>
+      </div>
+    `;
+    return;
   }
 
   for (const sg of state.supergroups) {
@@ -977,7 +1077,7 @@ function renderSupergroups() {
     const chip = document.createElement("div");
     chip.className = "chip";
     chip.innerHTML = `
-      <button class="chip-filter ${activeSupergroupFilter === sg.id ? "active" : ""}" data-filter-supergroup="${sg.id}" data-rename-supergroup="${sg.id}" title="Click to filter, double click to rename" type="button">
+      <button class="chip-filter ${activeSupergroupFilter === sg.id ? "active" : ""}" data-filter-supergroup="${sg.id}" data-rename-supergroup="${sg.id}" title="Click to filter, double click to rename, right click to edit groups" type="button">
         ${escapeHtml(sg.name)}
       </button>
       <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-supergroup="${sg.id}" type="button" aria-label="Toggle ${escapeHtml(sg.name)}" title="Toggle supergroup">
@@ -1091,7 +1191,10 @@ async function toggleSupergroup(sgId) {
   renderGroups();
   renderSupergroups();
   renderExtensionRows();
-  showToast(`Supergroup "${sg.name}" ${shouldEnable ? "enabled" : "disabled"}`);
+  showToast(
+    `Supergroup "${sg.name}" ${shouldEnable ? "enabled" : "disabled"}`,
+    shouldEnable ? "success" : "danger"
+  );
 }
 
 async function toggleGroupExtensions(scope) {
@@ -1115,7 +1218,7 @@ async function toggleGroupExtensions(scope) {
   await safeToggleMany(targetExtensions, shouldEnable);
   await reloadExtensionsOnly();
   renderAll();
-  showToast(label);
+  showToast(label, shouldEnable ? "success" : "danger");
 }
 
 async function safeToggleOne(extension) {
@@ -1129,7 +1232,7 @@ async function safeToggleOne(extension) {
   try {
     await chrome.management.setEnabled(extension.id, targetState);
     const action = targetState ? "enabled" : "disabled";
-    showToast(`"${extension.name}" ${action}`);
+    showToast(`"${extension.name}" ${action}`, targetState ? "success" : "danger");
   } catch (error) {
     showStatus("Chrome blocked this toggle request.");
     console.warn("Toggle blocked", error);
@@ -1165,20 +1268,39 @@ function showStatus(message) {
   }
 
   statusTimeoutId = setTimeout(() => {
-    refs.groupsHint.textContent = state.groups.length ? "" : "No groups yet. Create one to begin.";
+    refs.groupsHint.textContent = "";
     statusTimeoutId = null;
   }, 2600);
 }
 
-function showToast(message) {
+function showToast(message, variant = "default") {
   const toast = document.createElement("div");
-  toast.className = "toast";
+  toast.className = `toast ${variant === "default" ? "" : `toast-${variant}`}`.trim();
   toast.textContent = message;
-  refs.toastContainer.append(toast);
+  toast.setAttribute("role", variant === "danger" ? "alert" : "status");
+  toast.setAttribute("aria-live", variant === "danger" ? "assertive" : "polite");
+  toast.setAttribute("aria-atomic", "true");
+  if (variant === "default") {
+    refs.toastContainer.append(toast);
+  } else {
+    document.body.append(toast);
+  }
 
   setTimeout(() => {
     toast.remove();
   }, 2250);
+}
+
+function showSnapshotLimitToast() {
+  const toast = document.createElement("div");
+  toast.className = "toast toast-limit";
+  toast.textContent = `Limit reached: max ${MAX_SNAPSHOTS} snapshots.`;
+  toast.setAttribute("role", "alert");
+  toast.setAttribute("aria-live", "assertive");
+  toast.setAttribute("aria-atomic", "true");
+  document.body.append(toast);
+
+  setTimeout(() => toast.remove(), 2500);
 }
 
 function triggerFlash() {
