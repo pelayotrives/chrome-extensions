@@ -143,14 +143,26 @@ body {
   margin: 0;
   padding-left: 18px;
   font-size: 11px;
-  color: var(--ink);
+  color: var(--muted);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+}
+
+.info-steps li::marker {
+  color: var(--muted);
 }
 
 .info-steps strong {
   font-weight: 600;
+  color: var(--ink);
+}
+
+.info-footnote {
+  margin: 0;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
 }
 
 .search-row {

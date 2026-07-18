@@ -57,6 +57,8 @@ async function init() {
   await loadData();
   wireEvents();
   renderAll();
+  document.getElementById("versionLabel").textContent =
+    "v" + chrome.runtime.getManifest().version;
 }
 
 function wireEvents() {
