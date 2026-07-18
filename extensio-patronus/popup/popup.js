@@ -897,8 +897,9 @@ function isPlainObject(value) {
 }
 
 function hasExactKeys(value, expectedKeys) {
-  const keys = Object.keys(value).sort();
-  const sortedExpected = [...expectedKeys].sort();
+  const compareStrings = (left, right) => left.localeCompare(right, "en");
+  const keys = Object.keys(value).sort(compareStrings);
+  const sortedExpected = [...expectedKeys].sort(compareStrings);
   return keys.length === sortedExpected.length
     && keys.every((key, index) => key === sortedExpected[index]);
 }
@@ -1377,7 +1378,10 @@ function showStatus(message) {
 
 function showToast(message, variant = "default") {
   const toast = document.createElement("div");
-  toast.className = `toast ${variant === "default" ? "" : `toast-${variant}`}`.trim();
+  toast.className = "toast";
+  if (variant !== "default") {
+    toast.classList.add(`toast-${variant}`);
+  }
   toast.textContent = message;
   toast.setAttribute("role", variant === "danger" ? "alert" : "status");
   toast.setAttribute("aria-live", variant === "danger" ? "assertive" : "polite");

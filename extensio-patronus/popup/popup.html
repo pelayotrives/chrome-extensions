@@ -36,7 +36,7 @@
         <button id="tabButtonSettings" class="tab" data-tab="settings" type="button" role="tab" aria-selected="false" aria-controls="tabSettings">Settings</button>
       </nav>
 
-      <section id="tabGroups" class="tab-panel" role="tabpanel" aria-labelledby="tabButtonGroups">
+      <div id="tabGroups" class="tab-panel" aria-labelledby="tabButtonGroups">
         <section class="card groups">
           <h2>Groups</h2>
           <p class="section-desc">Create custom groups to organize your extensions. Click a group to filter, use the power button to toggle all its extensions.</p>
@@ -44,7 +44,7 @@
             <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
             <button id="createGroupBtn" type="button">Create</button>
           </div>
-          <p id="groupsHint" class="meta groups-hint" role="status" aria-live="polite" aria-atomic="true"></p>
+          <output id="groupsHint" class="meta groups-hint" aria-live="polite" aria-atomic="true"></output>
           <div id="groupsList" class="chips"></div>
         </section>
 
@@ -82,9 +82,9 @@
           </div>
           <div id="extensionsList" class="table-body"></div>
         </section>
-      </section>
+      </div>
 
-      <section id="tabSnapshots" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabButtonSnapshots">
+      <div id="tabSnapshots" class="tab-panel hidden" aria-labelledby="tabButtonSnapshots">
         <section class="card snapshots">
           <h2>Snapshots</h2>
           <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
@@ -93,9 +93,9 @@
           </div>
           <div id="snapshotsList" class="snapshot-list"></div>
         </section>
-      </section>
+      </div>
 
-      <section id="tabSettings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tabButtonSettings">
+      <div id="tabSettings" class="tab-panel hidden" aria-labelledby="tabButtonSettings">
         <section class="card info">
           <h2>Settings</h2>
           <p class="section-desc">Export your groups, supergroups, assignments and aliases as JSON. Import a file to restore them. Extensions not installed on this machine are safely ignored during import.</p>
@@ -144,7 +144,7 @@
             </p>
           </div>
         </section>
-      </section>
+      </div>
     </main>
 
     <dialog id="confirmModal" class="modal-dialog" aria-labelledby="confirmTitle">
@@ -159,7 +159,7 @@
     </dialog>
 
     <div id="importOverlay" class="import-overlay hidden" aria-hidden="true">
-      <div class="import-panel" role="status" aria-live="polite" aria-atomic="true">
+      <div class="import-panel">
         <div class="import-ring" aria-hidden="true">
           <svg viewBox="0 0 64 64" focusable="false">
             <circle class="import-ring-track" cx="32" cy="32" r="24"></circle>
@@ -167,7 +167,7 @@
           </svg>
           <span id="importProgressValue" class="import-progress-value">0%</span>
         </div>
-        <p id="importProgressText" class="import-progress-text">Preparing import…</p>
+        <output id="importProgressText" class="import-progress-text" aria-live="polite" aria-atomic="true">Preparing import…</output>
       </div>
     </div>
 
