@@ -18,6 +18,10 @@ const refs = {
   cancelDeleteBtn: document.getElementById("cancelDeleteBtn"),
   confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
   toastContainer: document.getElementById("toastContainer"),
+  importOverlay: document.getElementById("importOverlay"),
+  importProgressText: document.getElementById("importProgressText"),
+  importProgressValue: document.getElementById("importProgressValue"),
+  importRingProgress: document.getElementById("importRingProgress"),
   createSupergroupBtn: document.getElementById("createSupergroupBtn"),
   supergroupForm: document.getElementById("supergroupForm"),
   supergroupName: document.getElementById("supergroupName"),
@@ -27,6 +31,8 @@ const refs = {
 };
 
 const MAX_SNAPSHOTS = 9;
+const IMPORT_FILE_NAME = "extensio-patronus-config.json";
+const IMPORT_PROGRESS_CIRCUMFERENCE = 2 * Math.PI * 24;
 
 let installedExtensions = [];
 let state = {
@@ -72,6 +78,10 @@ async function init() {
   await loadData();
   wireEvents();
   renderAll();
+  if (refs.importRingProgress) {
+    refs.importRingProgress.style.strokeDasharray = String(IMPORT_PROGRESS_CIRCUMFERENCE);
+    refs.importRingProgress.style.strokeDashoffset = String(IMPORT_PROGRESS_CIRCUMFERENCE);
+  }
   const vLabel = document.getElementById("versionLabel");
   if (vLabel) {
     vLabel.textContent = "v" + chrome.runtime.getManifest().version;
@@ -649,7 +659,7 @@ function handleExportConfig() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "extensio-patronus-config.json";
+  a.download = IMPORT_FILE_NAME;
   a.click();
   URL.revokeObjectURL(url);
   showToast("Configuration exported", "success");
@@ -660,37 +670,65 @@ async function handleImportConfig() {
   const file = fileInput?.files?.[0];
   if (!file) return;
 
+  const startedAt = Date.now();
+
   try {
+    showImportOverlay();
+    setImportProgress(8, "Checking file name…");
+    await sleep(220);
+
+    if (file.name !== IMPORT_FILE_NAME) {
+      throw new Error(`File must be named ${IMPORT_FILE_NAME}.`);
+    }
+
+    setImportProgress(24, "Reading configuration…");
     const text = await file.text();
-    const data = JSON.parse(text);
-    if (Array.isArray(data.groups)) {
-      state.groups = sanitizeGroups(data.groups);
+    await sleep(220);
+
+    setImportProgress(42, "Validating JSON format…");
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error("Invalid JSON format.");
     }
-    if (Array.isArray(data.supergroups)) {
-      const groupIds = new Set(state.groups.map((g) => g.id));
-      state.supergroups = data.supergroups
-        .filter((sg) => sg && typeof sg.id === "string" && typeof sg.name === "string" && Array.isArray(sg.groupIds))
-        .map((sg) => ({
-          id: sg.id,
-          name: sg.name.slice(0, 32).trim() || "Supergroup",
-          groupIds: sg.groupIds.filter((gid) => groupIds.has(gid))
-        }))
-        .filter((sg) => sg.groupIds.length > 0);
+    const validationError = validateImportConfigPayload(data);
+    if (validationError) {
+      throw new Error(validationError);
     }
-    if (data.assignments && typeof data.assignments === "object") {
-      const extensionIds = new Set(installedExtensions.map((ext) => ext.id));
-      const groupIds = new Set(state.groups.map((g) => g.id));
-      state.assignments = sanitizeAssignments(data.assignments, extensionIds, groupIds);
-    }
-    if (data.aliases && typeof data.aliases === "object") {
-      const extensionIds = new Set(installedExtensions.map((ext) => ext.id));
-      state.aliases = sanitizeAliases(data.aliases, extensionIds);
-    }
+
+    await sleep(240);
+    setImportProgress(64, "Processing groups and assignments…");
+
+    const nextGroups = sanitizeGroups(data.groups);
+    const groupIds = new Set(nextGroups.map((g) => g.id));
+    const extensionIds = new Set(installedExtensions.map((ext) => ext.id));
+
+    state.groups = nextGroups;
+    state.supergroups = sanitizeSupergroups(data.supergroups, groupIds)
+      .filter((sg) => sg.groupIds.length > 0);
+    state.assignments = sanitizeAssignments(data.assignments, extensionIds, groupIds);
+    state.aliases = sanitizeAliases(data.aliases, extensionIds);
+
+    await sleep(260);
+    setImportProgress(88, "Saving configuration…");
     await saveState();
     renderAll();
+
+    await sleep(Math.max(0, 2000 - (Date.now() - startedAt)));
+    setImportProgress(100, "Import complete.");
+    await sleep(180);
+    hideImportOverlay();
     showToast("Configuration imported", "success");
-  } catch {
-    showToast("Invalid configuration file", "danger");
+  } catch (error) {
+    await sleep(Math.max(0, 2000 - (Date.now() - startedAt)));
+    setImportProgress(100, error instanceof Error ? error.message : "Import failed.");
+    await sleep(180);
+    hideImportOverlay();
+    showToast(
+      error instanceof Error ? error.message : "Invalid configuration file",
+      "danger"
+    );
   }
   fileInput.value = "";
 }
@@ -799,6 +837,70 @@ function sanitizeAliases(rawAliases, extensionIds) {
   }
 
   return result;
+}
+
+function validateImportConfigPayload(data) {
+  const topLevelKeys = ["groups", "supergroups", "assignments", "aliases", "exportedAt"];
+
+  if (!isPlainObject(data) || !hasExactKeys(data, topLevelKeys)) {
+    return "Invalid configuration schema.";
+  }
+
+  if (!Array.isArray(data.groups) || !data.groups.every(isValidImportGroup)) {
+    return "Invalid groups schema.";
+  }
+
+  if (!Array.isArray(data.supergroups) || !data.supergroups.every(isValidImportSupergroup)) {
+    return "Invalid supergroups schema.";
+  }
+
+  if (!isStringMap(data.assignments)) {
+    return "Invalid assignments schema.";
+  }
+
+  if (!isStringMap(data.aliases)) {
+    return "Invalid aliases schema.";
+  }
+
+  if (typeof data.exportedAt !== "string" || !data.exportedAt.trim()) {
+    return "Invalid exportedAt value.";
+  }
+
+  return "";
+}
+
+function isValidImportGroup(group) {
+  return isPlainObject(group)
+    && hasExactKeys(group, ["id", "name"])
+    && typeof group.id === "string"
+    && typeof group.name === "string";
+}
+
+function isValidImportSupergroup(supergroup) {
+  return isPlainObject(supergroup)
+    && hasExactKeys(supergroup, ["id", "name", "groupIds"])
+    && typeof supergroup.id === "string"
+    && typeof supergroup.name === "string"
+    && Array.isArray(supergroup.groupIds)
+    && supergroup.groupIds.every((groupId) => typeof groupId === "string");
+}
+
+function isStringMap(value) {
+  return isPlainObject(value)
+    && Object.entries(value).every(
+      ([key, mapValue]) => typeof key === "string" && typeof mapValue === "string"
+    );
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasExactKeys(value, expectedKeys) {
+  const keys = Object.keys(value).sort();
+  const sortedExpected = [...expectedKeys].sort();
+  return keys.length === sortedExpected.length
+    && keys.every((key, index) => key === sortedExpected[index]);
 }
 
 function sanitizeSnapshots(rawSnapshots, extensionIds) {
@@ -1301,6 +1403,38 @@ function showSnapshotLimitToast() {
   document.body.append(toast);
 
   setTimeout(() => toast.remove(), 2500);
+}
+
+function showImportOverlay() {
+  if (!refs.importOverlay) return;
+  refs.importOverlay.classList.remove("hidden");
+  refs.importOverlay.setAttribute("aria-hidden", "false");
+  setImportProgress(0, "Preparing import…");
+}
+
+function hideImportOverlay() {
+  if (!refs.importOverlay) return;
+  refs.importOverlay.classList.add("hidden");
+  refs.importOverlay.setAttribute("aria-hidden", "true");
+}
+
+function setImportProgress(percent, message) {
+  const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+
+  if (refs.importProgressText) {
+    refs.importProgressText.textContent = message;
+  }
+  if (refs.importProgressValue) {
+    refs.importProgressValue.textContent = `${clamped}%`;
+  }
+  if (refs.importRingProgress) {
+    const offset = IMPORT_PROGRESS_CIRCUMFERENCE * (1 - clamped / 100);
+    refs.importRingProgress.style.strokeDashoffset = String(offset);
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function triggerFlash() {

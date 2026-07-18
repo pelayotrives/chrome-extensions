@@ -158,6 +158,19 @@
       </div>
     </dialog>
 
+    <div id="importOverlay" class="import-overlay hidden" aria-hidden="true">
+      <div class="import-panel" role="status" aria-live="polite" aria-atomic="true">
+        <div class="import-ring" aria-hidden="true">
+          <svg viewBox="0 0 64 64" focusable="false">
+            <circle class="import-ring-track" cx="32" cy="32" r="24"></circle>
+            <circle id="importRingProgress" class="import-ring-progress" cx="32" cy="32" r="24"></circle>
+          </svg>
+          <span id="importProgressValue" class="import-progress-value">0%</span>
+        </div>
+        <p id="importProgressText" class="import-progress-text">Preparing import…</p>
+      </div>
+    </div>
+
     <div id="toastContainer" class="toast-container" aria-live="off"></div>
 
     <script src="popup.js" type="module"></script>

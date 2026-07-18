@@ -238,7 +238,7 @@ body {
     transparent 100%
   );
   transform: translateX(-140%);
-  animation: snap-shine 1.35s cubic-bezier(0.22, 0.05, 0.2, 1) forwards;
+  animation: snap-shine 2.2s cubic-bezier(0.16, 0.02, 0.12, 1) forwards;
   pointer-events: none;
 }
 
@@ -694,15 +694,90 @@ button:hover {
   0% {
     transform: translateX(-140%);
   }
-  14% {
-    transform: translateX(-132%);
+  18% {
+    transform: translateX(-134%);
   }
-  72% {
-    transform: translateX(108%);
+  76% {
+    transform: translateX(102%);
   }
   100% {
     transform: translateX(140%);
   }
+}
+
+.import-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.import-overlay.hidden {
+  display: none;
+}
+
+.import-panel {
+  width: min(280px, calc(100vw - 32px));
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(26, 26, 26, 0.96);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.import-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.import-ring svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.import-ring-track,
+.import-ring-progress {
+  fill: none;
+  stroke-width: 5;
+}
+
+.import-ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.import-ring-progress {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.35s ease;
+}
+
+.import-progress-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.import-progress-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.45;
 }
 
 .modal-panel {
