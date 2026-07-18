@@ -203,6 +203,8 @@ body {
 }
 
 .snap-row {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 28px 28px;
   gap: 6px;
@@ -211,6 +213,26 @@ body {
   border-radius: 5px;
   background: var(--panel-2);
   border: 1px solid var(--line);
+}
+
+.snap-row-new::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% -35%;
+  width: 48%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.04) 28%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.08) 72%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(0.5px);
+  transform: translateX(-160%) skewX(-18deg);
+  animation: snap-shine 2.3s cubic-bezier(0.2, 0.02, 0.14, 1) 0.12s 1 forwards;
 }
 
 .snap-btn {
@@ -358,6 +380,30 @@ button:hover {
 .drop-label {
   font-size: 10px;
   color: var(--muted);
+}
+
+.empty-state {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px 12px;
+  border: 1px dashed var(--line-2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.015);
+  text-align: center;
+}
+
+.empty-state-title,
+.empty-state-text {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.empty-state-text {
+  margin-top: 4px;
+  font-weight: 400;
 }
 
 .supergroup-actions {
@@ -617,6 +663,81 @@ button:hover {
   backdrop-filter: blur(3px);
 }
 
+.import-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(4px);
+}
+
+.import-overlay.hidden {
+  display: none;
+}
+
+.import-panel {
+  width: min(280px, calc(100vw - 40px));
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(31, 31, 31, 0.98), rgba(20, 20, 20, 0.98));
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.import-ring {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+}
+
+.import-ring svg {
+  width: 72px;
+  height: 72px;
+  transform: rotate(-90deg);
+}
+
+.import-ring-track,
+.import-ring-progress {
+  fill: none;
+  stroke-width: 5;
+}
+
+.import-ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.import-ring-progress {
+  stroke: var(--ok);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.28s ease;
+}
+
+.import-progress-value {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.import-progress-text {
+  display: block;
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .flash-overlay {
   position: fixed;
   inset: 0;
@@ -634,6 +755,26 @@ button:hover {
   100% {
     background: rgba(255, 255, 255, 0);
     transform: scale(1);
+  }
+}
+
+@keyframes snap-shine {
+  0% {
+    opacity: 0;
+    transform: translateX(-175%) skewX(-18deg);
+  }
+  16% {
+    opacity: 0.18;
+  }
+  48% {
+    opacity: 0.96;
+  }
+  82% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(285%) skewX(-18deg);
   }
 }
 
