@@ -169,6 +169,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 100px;
   gap: 8px;
+  margin: 4px 0 12px;
 }
 
 .sort-select {
@@ -180,7 +181,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
+  margin: 4px 0 12px;
 }
 
 .snapshot-limit-hint {
@@ -195,7 +196,7 @@ body {
 .snapshot-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .snap-row {
@@ -281,6 +282,7 @@ select {
   display: grid;
   grid-template-columns: 1fr 86px;
   gap: 8px;
+  margin: 4px 0 12px;
 }
 
 button {
@@ -337,6 +339,24 @@ button:hover {
   border-color: rgba(107, 143, 163, 0.25);
 }
 
+.chip.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.drop-label {
+  font-size: 10px;
+  color: var(--muted);
+}
+
 .chip-delete {
   background: #2a1a1e;
   border-color: #4b232b;
@@ -379,6 +399,11 @@ button:hover {
 .row {
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
+  cursor: grab;
+}
+
+.row.dragging {
+  opacity: 0.35;
 }
 
 .row:last-child {

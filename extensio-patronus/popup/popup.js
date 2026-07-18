@@ -57,8 +57,10 @@ async function init() {
   await loadData();
   wireEvents();
   renderAll();
-  document.getElementById("versionLabel").textContent =
-    "v" + chrome.runtime.getManifest().version;
+  const vLabel = document.getElementById("versionLabel");
+  if (vLabel) {
+    vLabel.textContent = "v" + chrome.runtime.getManifest().version;
+  }
 }
 
 function wireEvents() {
@@ -72,6 +74,41 @@ function wireEvents() {
 
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+  });
+
+  refs.groupsList.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    const target = event.target.closest("[data-drop-group]");
+    refs.groupsList.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+    if (target) target.classList.add("drag-over");
+  });
+
+  refs.groupsList.addEventListener("dragleave", (event) => {
+    const target = event.target.closest("[data-drop-group]");
+    if (target) target.classList.remove("drag-over");
+  });
+
+  refs.groupsList.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    refs.groupsList.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
+
+    const extensionId = event.dataTransfer.getData("text/extensio-ext-id");
+    if (!extensionId) return;
+
+    const target = event.target.closest("[data-drop-group]");
+    if (!target) return;
+
+    const groupId = target.dataset.dropGroup;
+    if (groupId) {
+      state.assignments[extensionId] = groupId;
+    } else {
+      delete state.assignments[extensionId];
+    }
+
+    await saveState();
+    renderGroups();
+    renderExtensionRows();
+    showToast(groupId ? "Extension assigned to group" : "Extension removed from group");
   });
 
   refs.openChromeExtensionsBtn.addEventListener("click", async () => {
@@ -550,6 +587,8 @@ function renderAll() {
 }
 
 function renderSnapshots() {
+  if (!refs.snapshotsList || !refs.saveSnapshotBtn || !refs.snapshotLimitHint) return;
+
   refs.snapshotsList.innerHTML = "";
 
   const atMax = state.snapshots.length >= 9;
@@ -581,6 +620,8 @@ function renderSnapshots() {
 }
 
 function renderGroups() {
+  if (!refs.groupsList) return;
+
   refs.groupsList.innerHTML = "";
 
   const allCount = installedExtensions.length;
@@ -606,6 +647,7 @@ function renderGroups() {
 
     const chip = document.createElement("div");
     chip.className = "chip";
+    chip.dataset.dropGroup = group.id;
     chip.innerHTML = `
       <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" type="button">
         ${escapeHtml(group.name)} (${count})
@@ -620,9 +662,19 @@ function renderGroups() {
   }
 
   refs.groupsHint.textContent = state.groups.length ? "" : "No groups yet. Create one to begin.";
+
+  if (state.groups.length) {
+    const unassignChip = document.createElement("div");
+    unassignChip.className = "chip single drop-zone";
+    unassignChip.dataset.dropGroup = "";
+    unassignChip.innerHTML = `<span class="drop-label">Drop here to remove group</span>`;
+    refs.groupsList.append(unassignChip);
+  }
 }
 
 function renderExtensionRows() {
+  if (!refs.extensionsList || !refs.searchInput) return;
+
   const query = refs.searchInput.value.trim().toLowerCase();
 
   const visible = installedExtensions.filter((item) => {
@@ -645,6 +697,10 @@ function renderExtensionRows() {
 
     const row = document.createElement("div");
     row.className = "row";
+    row.draggable = true;
+    row.dataset.dragExt = extension.id;
+    row.addEventListener("dragstart", handleDragStart);
+    row.addEventListener("dragend", handleDragEnd);
 
     const groupOptions = [
       `<option value="">No group</option>`,
@@ -781,6 +837,18 @@ function showToast(message) {
   setTimeout(() => {
     toast.remove();
   }, 2250);
+}
+
+function handleDragStart(event) {
+  const row = event.currentTarget;
+  row.classList.add("dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/extensio-ext-id", row.dataset.dragExt);
+}
+
+function handleDragEnd(event) {
+  event.currentTarget.classList.remove("dragging");
+  document.querySelectorAll(".drag-over").forEach((el) => el.classList.remove("drag-over"));
 }
 
 function handleGlobalShortcuts(event) {

@@ -6,6 +6,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [1.2.3]
+
+### Added
+
+- **Drag and drop**: drag an extension row onto a group chip to assign it instantly. A "Drop here to remove group" zone lets you unassign by dragging there too.
+
+### Changed
+
+- **Cards merged**: "New group" and "Groups" unified into a single card; "Search extension" and the extensions table merged into an "Extensions" card. Cleaner layout, less visual noise.
+- Spacing standardized across all form rows, snapshot actions, and snapshot list items.
+
+---
+
+## [1.2.2]
+
+### Changed
+
+- **Info tab rewritten** with a more natural tone: "How it works" steps explain the why behind each feature.
+- Steps body text uses muted gray; only the bold labels stay white for contrast.
+- List markers dimmed to muted instead of accent blue.
+- "Partial" legend label changed to "Some on, some off" for clarity.
+- Section headings renamed: "Getting started" to "How it works", "Shortcuts" to "Keyboard shortcuts".
+
+### Added
+
+- **Version footnote** at the bottom of Info: reads from `manifest.json` at runtime so it always stays in sync.
+
+### Removed
+
+- Static version string and "Chrome MV3" label from the Info footnote.
+- `.version` file (version lives in `manifest.json` only).
+
+---
+
 ## [1.2.1]
 
 ### Added

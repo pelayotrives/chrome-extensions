@@ -37,25 +37,20 @@
       </nav>
 
       <section id="tabGroups" class="tab-panel">
-        <section class="card group-create">
-          <h2>New group</h2>
-          <p class="section-desc">Create custom groups to organize your extensions.</p>
+        <section class="card groups">
+          <h2>Groups</h2>
+          <p class="section-desc">Create custom groups to organize your extensions. Click a group to filter, use the power button to toggle all its extensions.</p>
           <div class="inline-form">
             <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
             <button id="createGroupBtn" type="button">Create</button>
           </div>
-        </section>
-
-        <section class="card groups">
-          <h2>Groups</h2>
-          <p class="section-desc">Click a group to filter. Use the power button to toggle all extensions in a group.</p>
           <p id="groupsHint" class="meta groups-hint"></p>
           <div id="groupsList" class="chips"></div>
         </section>
 
-        <section class="card search">
-          <h2>Search extension</h2>
-          <p class="section-desc">Filter extensions by name or alias. Sort to reorder the list.</p>
+        <section class="card extensions">
+          <h2>Extensions</h2>
+          <p class="section-desc">Filter by name or alias, sort to reorder. Toggle or open options for each extension.</p>
           <div class="search-row">
             <input id="searchInput" type="search" placeholder="Extension name or alias" aria-label="Search extensions" />
             <select id="sortOrder" class="sort-select" aria-label="Sort order">
@@ -65,9 +60,6 @@
               <option value="disabled-first">Disabled first</option>
             </select>
           </div>
-        </section>
-
-        <section class="card">
           <div class="table-head">
             <span>Extension</span>
             <span>Status</span>
@@ -99,7 +91,7 @@
             <h3>How it works</h3>
             <ol class="info-steps">
               <li><strong>Create groups</strong> to match your workflows. Call them Work, Dev, AI, Writing, whatever fits.</li>
-              <li><strong>Assign each extension</strong> to a group using the dropdown next to its name.</li>
+              <li><strong>Assign each extension</strong> to a group using the dropdown next to its name, or drag and drop it onto a group chip.</li>
               <li><strong>Toggle groups instantly</strong> with the power button. One click disables everything you don't need right now.</li>
               <li><strong>Snapshots</strong> let you freeze a full extension state and jump back to it later. Perfect for switching contexts.</li>
             </ol>
@@ -113,6 +105,7 @@
               <div><kbd>Ctrl+1</kbd> Toggle all extensions</div>
               <div><kbd>Ctrl+2..9</kbd> Toggle groups 1-8</div>
               <div><kbd>Dbl click</kbd> Edit alias / rename</div>
+              <div><kbd>Drag row</kbd> Drop on chip to assign</div>
             </div>
           </div>
 
