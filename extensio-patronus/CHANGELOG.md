@@ -6,6 +6,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [1.3.0]
+
+### Added
+
+- **Supergroups**: group multiple groups together and toggle all their extensions at once. Create, delete (with confirmation modal), rename (double click), and filter (single click shows only contained groups and extensions).
+- **Group rename**: double click any group chip to edit its name inline.
+- **Settings tab**: replaces the old Info tab. Includes export (download groups, supergroups, assignments and aliases as JSON) and import (restore from a file; extensions not installed are safely ignored).
+- **Snapshot flash effect**: a brief screen flash animation on save, similar to a macOS screenshot capture.
+- **Modal backdrop blur**: confirmation dialogs now apply a slight blur to the background.
+
+### Changed
+
+- **Tab renamed**: "Info" is now "Settings".
+- Delete confirmation modal now handles all three entity types: groups, snapshots, and supergroups.
+- Escape key also clears active supergroup filter.
+- Supergroup chip layout matches groups (no extra summary row).
+
+### Fixed
+
+- Supergroup form spacing now consistent with other sections.
+- Checkboxes replaced with chip-style toggles in the supergroup creation form.
+
+---
+
 ## [1.2.4]
 
 ### Added

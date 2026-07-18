@@ -33,7 +33,7 @@
       <nav class="tab-bar">
         <button class="tab active" data-tab="groups" type="button">Groups</button>
         <button class="tab" data-tab="snapshots" type="button">Snapshots</button>
-        <button class="tab" data-tab="info" type="button">Info</button>
+        <button class="tab" data-tab="settings" type="button">Settings</button>
       </nav>
 
       <section id="tabGroups" class="tab-panel">
@@ -96,10 +96,15 @@
         </section>
       </section>
 
-      <section id="tabInfo" class="tab-panel hidden">
+      <section id="tabSettings" class="tab-panel hidden">
         <section class="card info">
-          <h2>About Extensio Patronus</h2>
-          <p class="section-desc">Your extension management hub. Group, control, and snapshot your extensions. All from one compact popup.</p>
+          <h2>Settings</h2>
+          <p class="section-desc">Export your groups, supergroups, assignments and aliases as JSON. Import a file to restore them. Extensions not installed on this machine are safely ignored during import.</p>
+          <div class="settings-actions">
+            <button id="exportConfigBtn" type="button">Export config</button>
+            <button id="importConfigBtn" type="button">Import config</button>
+            <input type="file" id="importFileInput" accept=".json" aria-label="Import config file" style="display:none" />
+          </div>
 
           <div class="info-block">
             <h3>How it works</h3>

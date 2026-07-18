@@ -35,8 +35,12 @@ let state = {
   supergroups: []
 };
 let activeGroupFilter = "all";
+let activeSupergroupFilter = null;
+let sgClickTimer = null;
+let groupClickTimer = null;
 let pendingDeleteGroupId = null;
 let pendingDeleteSnapshotId = null;
+let pendingDeleteSupergroupId = null;
 let statusTimeoutId = null;
 let sortMode = "az";
 
@@ -82,6 +86,17 @@ function wireEvents() {
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => switchTab(tab.dataset.tab));
   });
+
+  const exportBtn = document.getElementById("exportConfigBtn");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", handleExportConfig);
+  }
+  const importBtn = document.getElementById("importConfigBtn");
+  const importFile = document.getElementById("importFileInput");
+  if (importBtn && importFile) {
+    importBtn.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", handleImportConfig);
+  }
 
   refs.groupsList.addEventListener("dragover", (event) => {
     event.preventDefault();
@@ -151,6 +166,22 @@ function wireEvents() {
   });
 
   refs.supergroupsList.addEventListener("click", async (event) => {
+    const filterBtn = event.target.closest("button[data-filter-supergroup]");
+    if (filterBtn) {
+      if (sgClickTimer) clearTimeout(sgClickTimer);
+      const sgId = filterBtn.dataset.filterSupergroup;
+      sgClickTimer = setTimeout(() => {
+        if (activeSupergroupFilter === sgId) {
+          activeSupergroupFilter = null;
+        } else {
+          activeSupergroupFilter = sgId;
+        }
+        renderAll();
+        sgClickTimer = null;
+      }, 250);
+      return;
+    }
+
     const bulkBtn = event.target.closest("button[data-bulk-supergroup]");
     if (bulkBtn) {
       await toggleSupergroup(bulkBtn.dataset.bulkSupergroup);
@@ -162,10 +193,13 @@ function wireEvents() {
       const sgId = deleteBtn.dataset.deleteSupergroup;
       const sg = state.supergroups.find((s) => s.id === sgId);
       if (!sg) return;
-      state.supergroups = state.supergroups.filter((s) => s.id !== sgId);
-      await saveState();
-      renderSupergroups();
-      showToast(`Supergroup "${sg.name}" deleted`);
+
+      pendingDeleteGroupId = null;
+      pendingDeleteSnapshotId = null;
+      pendingDeleteSupergroupId = sgId;
+      refs.confirmTitle.textContent = "Delete supergroup";
+      refs.confirmText.textContent = `Delete supergroup "${sg.name}"? This action cannot be undone.`;
+      refs.confirmModal.showModal();
     }
   });
 
@@ -177,8 +211,14 @@ function wireEvents() {
   refs.groupsList.addEventListener("click", async (event) => {
     const filterBtn = event.target.closest("button[data-filter-group]");
     if (filterBtn) {
-      activeGroupFilter = filterBtn.dataset.filterGroup || "all";
-      renderAll();
+      if (groupClickTimer) clearTimeout(groupClickTimer);
+      const groupId = filterBtn.dataset.filterGroup || "all";
+      groupClickTimer = setTimeout(() => {
+        activeGroupFilter = groupId;
+        activeSupergroupFilter = null;
+        renderAll();
+        groupClickTimer = null;
+      }, 250);
       return;
     }
 
@@ -201,10 +241,21 @@ function wireEvents() {
   refs.confirmDeleteBtn.addEventListener("click", async () => {
     const deletingGroup = pendingDeleteGroupId;
     const deletingSnapshot = pendingDeleteSnapshotId;
+    const deletingSupergroup = pendingDeleteSupergroupId;
 
     pendingDeleteGroupId = null;
     pendingDeleteSnapshotId = null;
+    pendingDeleteSupergroupId = null;
     closeDeleteModal();
+
+    if (deletingSupergroup) {
+      const sgName = state.supergroups.find((s) => s.id === deletingSupergroup)?.name || "Supergroup";
+      state.supergroups = state.supergroups.filter((s) => s.id !== deletingSupergroup);
+      await saveState();
+      renderAll();
+      showToast(`Supergroup "${sgName}" deleted`);
+      return;
+    }
 
     if (deletingSnapshot) {
       const snapName = state.snapshots.find((s) => s.id === deletingSnapshot)?.name || "Snapshot";
@@ -330,6 +381,86 @@ function wireEvents() {
     const snapshot = state.snapshots.find((item) => item.id === snapshotId);
     if (snapshot) startSnapshotRename(snapName, snapshot);
   });
+
+  refs.groupsList.addEventListener("dblclick", (event) => {
+    if (groupClickTimer) { clearTimeout(groupClickTimer); groupClickTimer = null; }
+    const btn = event.target.closest("[data-rename-group]");
+    if (!btn) return;
+    const group = state.groups.find((g) => g.id === btn.dataset.renameGroup);
+    if (!group) return;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 32;
+    input.value = group.name;
+    input.style.width = btn.offsetWidth + "px";
+    input.style.fontSize = "12px";
+    btn.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+    const commit = async () => {
+      if (done) return;
+      done = true;
+      const newName = input.value.trim();
+      if (newName) group.name = newName;
+      await saveState();
+      renderGroups();
+      renderSupergroups();
+      renderExtensionRows();
+    };
+    const cancel = () => {
+      if (done) return;
+      done = true;
+      renderGroups();
+      renderSupergroups();
+      renderExtensionRows();
+    };
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") { e.preventDefault(); await commit(); }
+      if (e.key === "Escape") { e.preventDefault(); cancel(); }
+    });
+    input.addEventListener("blur", () => { commit(); });
+  });
+
+  refs.supergroupsList.addEventListener("dblclick", (event) => {
+    if (sgClickTimer) { clearTimeout(sgClickTimer); sgClickTimer = null; }
+    const btn = event.target.closest("[data-rename-supergroup]");
+    if (!btn) return;
+    const sg = state.supergroups.find((s) => s.id === btn.dataset.renameSupergroup);
+    if (!sg) return;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 32;
+    input.value = sg.name;
+    input.style.width = btn.offsetWidth + "px";
+    input.style.fontSize = "12px";
+    btn.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+    const commit = async () => {
+      if (done) return;
+      done = true;
+      const newName = input.value.trim();
+      if (newName) sg.name = newName;
+      await saveState();
+      renderSupergroups();
+    };
+    const cancel = () => {
+      if (done) return;
+      done = true;
+      renderSupergroups();
+    };
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") { e.preventDefault(); await commit(); }
+      if (e.key === "Escape") { e.preventDefault(); cancel(); }
+    });
+    input.addEventListener("blur", () => { commit(); });
+  });
 }
 
 async function handleCreateGroup() {
@@ -379,6 +510,7 @@ async function handleSaveSnapshot() {
   await saveState();
   renderAll();
   showToast(`Snapshot "${name}" saved`);
+  triggerFlash();
 }
 
 async function handleRestoreSnapshot(snapshotId) {
@@ -455,6 +587,64 @@ function startSnapshotRename(nameNode, snapshot) {
       console.error("Snapshot rename failed", error);
     });
   });
+}
+
+function handleExportConfig() {
+  const data = {
+    groups: state.groups,
+    supergroups: state.supergroups,
+    assignments: state.assignments,
+    aliases: state.aliases,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "extensio-patronus-config.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Configuration exported");
+}
+
+async function handleImportConfig() {
+  const fileInput = document.getElementById("importFileInput");
+  const file = fileInput?.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (Array.isArray(data.groups)) {
+      state.groups = sanitizeGroups(data.groups);
+    }
+    if (Array.isArray(data.supergroups)) {
+      const groupIds = new Set(state.groups.map((g) => g.id));
+      state.supergroups = data.supergroups
+        .filter((sg) => sg && typeof sg.id === "string" && typeof sg.name === "string" && Array.isArray(sg.groupIds))
+        .map((sg) => ({
+          id: sg.id,
+          name: sg.name.slice(0, 32).trim() || "Supergroup",
+          groupIds: sg.groupIds.filter((gid) => groupIds.has(gid))
+        }))
+        .filter((sg) => sg.groupIds.length > 0);
+    }
+    if (data.assignments && typeof data.assignments === "object") {
+      const extensionIds = new Set(installedExtensions.map((ext) => ext.id));
+      const groupIds = new Set(state.groups.map((g) => g.id));
+      state.assignments = sanitizeAssignments(data.assignments, extensionIds, groupIds);
+    }
+    if (data.aliases && typeof data.aliases === "object") {
+      const extensionIds = new Set(installedExtensions.map((ext) => ext.id));
+      state.aliases = sanitizeAliases(data.aliases, extensionIds);
+    }
+    await saveState();
+    renderAll();
+    showToast("Configuration imported");
+  } catch {
+    showToast("Invalid configuration file");
+  }
+  fileInput.value = "";
 }
 
 async function loadData() {
@@ -711,6 +901,13 @@ function renderGroups() {
 
   refs.groupsList.innerHTML = "";
 
+  const visibleGroups = activeSupergroupFilter
+    ? state.groups.filter((g) => {
+        const sg = state.supergroups.find((s) => s.id === activeSupergroupFilter);
+        return sg?.groupIds.includes(g.id);
+      })
+    : state.groups;
+
   const allCount = installedExtensions.length;
   const allEnabledCount = installedExtensions.filter((item) => item.enabled).length;
   const allPowerClass = getPowerClass(allCount, allEnabledCount);
@@ -726,7 +923,7 @@ function renderGroups() {
   `;
   refs.groupsList.append(allChip);
 
-  for (const group of state.groups) {
+  for (const group of visibleGroups) {
     const groupExtensions = installedExtensions.filter((item) => state.assignments[item.id] === group.id);
     const count = groupExtensions.length;
     const enabledCount = groupExtensions.filter((item) => item.enabled).length;
@@ -736,7 +933,7 @@ function renderGroups() {
     chip.className = "chip";
     chip.dataset.dropGroup = group.id;
     chip.innerHTML = `
-      <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" type="button">
+      <button class="chip-filter ${activeGroupFilter === group.id ? "active" : ""}" data-filter-group="${group.id}" data-rename-group="${group.id}" title="Double click to rename" type="button">
         ${escapeHtml(group.name)} (${count})
       </button>
       <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-toggle="${group.id}" type="button" aria-label="Toggle ${escapeHtml(group.name)} extensions" title="Toggle group">
@@ -776,14 +973,12 @@ function renderSupergroups() {
     const count = allExts.length;
     const enabledCount = allExts.filter((e) => e.enabled).length;
     const powerClass = getPowerClass(count, enabledCount);
-    const groupNames = containedGroups.map((g) => g.name).join(", ");
 
     const chip = document.createElement("div");
     chip.className = "chip";
-    chip.style.gridTemplateColumns = "1fr 28px 28px";
     chip.innerHTML = `
-      <button class="chip-filter" title="${escapeHtml(groupNames)}" type="button">
-        ${escapeHtml(sg.name)} (${containedGroups.length}g / ${count}e)
+      <button class="chip-filter ${activeSupergroupFilter === sg.id ? "active" : ""}" data-filter-supergroup="${sg.id}" data-rename-supergroup="${sg.id}" title="Click to filter, double click to rename" type="button">
+        ${escapeHtml(sg.name)}
       </button>
       <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-supergroup="${sg.id}" type="button" aria-label="Toggle ${escapeHtml(sg.name)}" title="Toggle supergroup">
         ${POWER_ICON}
@@ -804,6 +999,11 @@ function renderExtensionRows() {
     const inQuery = !query || item.name.toLowerCase().includes(query) || alias.includes(query);
     if (!inQuery) return false;
 
+    if (activeSupergroupFilter) {
+      const sg = state.supergroups.find((s) => s.id === activeSupergroupFilter);
+      if (sg) return sg.groupIds.includes(state.assignments[item.id]);
+      return false;
+    }
     if (activeGroupFilter === "all") return true;
     return state.assignments[item.id] === activeGroupFilter;
   });
@@ -981,6 +1181,13 @@ function showToast(message) {
   }, 2250);
 }
 
+function triggerFlash() {
+  const overlay = document.createElement("div");
+  overlay.className = "flash-overlay";
+  document.body.append(overlay);
+  setTimeout(() => overlay.remove(), 320);
+}
+
 function handleDragStart(event) {
   const row = event.currentTarget;
   row.classList.add("dragging");
@@ -1025,11 +1232,12 @@ function handleGlobalShortcuts(event) {
   }
 
   const hasSearch = refs.searchInput.value.trim().length > 0;
-  const hasGroupFilter = activeGroupFilter !== "all";
+  const hasGroupFilter = activeGroupFilter !== "all" || activeSupergroupFilter;
   if (!hasSearch && !hasGroupFilter) return;
 
   refs.searchInput.value = "";
   activeGroupFilter = "all";
+  activeSupergroupFilter = null;
   renderAll();
 }
 
@@ -1120,6 +1328,7 @@ function closeDeleteModal() {
   }
   pendingDeleteGroupId = null;
   pendingDeleteSnapshotId = null;
+  pendingDeleteSupergroupId = null;
 }
 
 async function openBestPageForExtension(extension) {
