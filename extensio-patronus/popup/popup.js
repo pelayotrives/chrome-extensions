@@ -17,7 +17,13 @@ const refs = {
   confirmText: document.getElementById("confirmText"),
   cancelDeleteBtn: document.getElementById("cancelDeleteBtn"),
   confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
-  toastContainer: document.getElementById("toastContainer")
+  toastContainer: document.getElementById("toastContainer"),
+  createSupergroupBtn: document.getElementById("createSupergroupBtn"),
+  supergroupForm: document.getElementById("supergroupForm"),
+  supergroupName: document.getElementById("supergroupName"),
+  supergroupOptions: document.getElementById("supergroupOptions"),
+  confirmSupergroupBtn: document.getElementById("confirmSupergroupBtn"),
+  supergroupsList: document.getElementById("supergroupsList")
 };
 
 let installedExtensions = [];
@@ -25,7 +31,8 @@ let state = {
   groups: [],
   assignments: {},
   aliases: {},
-  snapshots: []
+  snapshots: [],
+  supergroups: []
 };
 let activeGroupFilter = "all";
 let pendingDeleteGroupId = null;
@@ -111,6 +118,57 @@ function wireEvents() {
     showToast(groupId ? "Extension assigned to group" : "Extension removed from group");
   });
 
+  refs.createSupergroupBtn.addEventListener("click", () => {
+    const form = refs.supergroupForm;
+    const visible = form.style.display !== "none";
+    form.style.display = visible ? "none" : "block";
+    renderSupergroups();
+  });
+
+  refs.supergroupOptions.addEventListener("click", (event) => {
+    const chip = event.target.closest(".sg-chip");
+    if (!chip) return;
+    chip.classList.toggle("active");
+  });
+
+  refs.confirmSupergroupBtn.addEventListener("click", async () => {
+    const name = refs.supergroupName.value.trim();
+    if (!name) return;
+    const activeChips = refs.supergroupOptions.querySelectorAll(".sg-chip.active");
+    const groupIds = [...activeChips].map((c) => c.dataset.sgGroup);
+    if (!groupIds.length) return;
+
+    state.supergroups.push({
+      id: crypto.randomUUID(),
+      name,
+      groupIds
+    });
+
+    refs.supergroupForm.style.display = "none";
+    await saveState();
+    renderSupergroups();
+    showToast(`Supergroup "${name}" created`);
+  });
+
+  refs.supergroupsList.addEventListener("click", async (event) => {
+    const bulkBtn = event.target.closest("button[data-bulk-supergroup]");
+    if (bulkBtn) {
+      await toggleSupergroup(bulkBtn.dataset.bulkSupergroup);
+      return;
+    }
+
+    const deleteBtn = event.target.closest("button[data-delete-supergroup]");
+    if (deleteBtn) {
+      const sgId = deleteBtn.dataset.deleteSupergroup;
+      const sg = state.supergroups.find((s) => s.id === sgId);
+      if (!sg) return;
+      state.supergroups = state.supergroups.filter((s) => s.id !== sgId);
+      await saveState();
+      renderSupergroups();
+      showToast(`Supergroup "${sg.name}" deleted`);
+    }
+  });
+
   refs.openChromeExtensionsBtn.addEventListener("click", async () => {
     await chrome.tabs.create({ url: "chrome://extensions/" });
   });
@@ -171,6 +229,11 @@ function wireEvents() {
         activeGroupFilter = "all";
       }
 
+      for (const sg of state.supergroups) {
+        sg.groupIds = sg.groupIds.filter((gid) => gid !== deletingGroup);
+      }
+      state.supergroups = state.supergroups.filter((sg) => sg.groupIds.length > 0);
+
       await saveState();
       renderAll();
       showToast(`Group "${groupName}" deleted`);
@@ -215,6 +278,7 @@ function wireEvents() {
       await safeToggleOne(extension);
       await reloadExtensionsOnly();
       renderGroups();
+      renderSupergroups();
       renderExtensionRows();
       return;
     }
@@ -428,8 +492,29 @@ function normalizeState(maybeState) {
     snapshots: sanitizeSnapshots(
       Array.isArray(maybeState?.snapshots) ? maybeState.snapshots : [],
       extensionIds
+    ),
+    supergroups: sanitizeSupergroups(
+      Array.isArray(maybeState?.supergroups) ? maybeState.supergroups : [],
+      groupIds
     )
   };
+}
+
+function sanitizeSupergroups(rawSupergroups, groupIds) {
+  const seen = new Set();
+  const result = [];
+  for (const sg of rawSupergroups) {
+    if (!sg || typeof sg.id !== "string" || typeof sg.name !== "string") continue;
+    if (seen.has(sg.id)) continue;
+    if (!Array.isArray(sg.groupIds)) continue;
+    seen.add(sg.id);
+    result.push({
+      id: sg.id,
+      name: sg.name.slice(0, 32).trim() || "Supergroup",
+      groupIds: sg.groupIds.filter((gid) => groupIds.has(gid))
+    });
+  }
+  return result;
 }
 
 function sanitizeGroups(rawGroups) {
@@ -574,6 +659,7 @@ function switchTab(tabId) {
 
   if (tabId === "groups") {
     renderGroups();
+    renderSupergroups();
     renderExtensionRows();
   } else if (tabId === "snapshots") {
     renderSnapshots();
@@ -581,8 +667,9 @@ function switchTab(tabId) {
 }
 
 function renderAll() {
-  renderSnapshots();
   renderGroups();
+  renderSupergroups();
+  renderSnapshots();
   renderExtensionRows();
 }
 
@@ -662,13 +749,48 @@ function renderGroups() {
   }
 
   refs.groupsHint.textContent = state.groups.length ? "" : "No groups yet. Create one to begin.";
+}
 
-  if (state.groups.length) {
-    const unassignChip = document.createElement("div");
-    unassignChip.className = "chip single drop-zone";
-    unassignChip.dataset.dropGroup = "";
-    unassignChip.innerHTML = `<span class="drop-label">Drop here to remove group</span>`;
-    refs.groupsList.append(unassignChip);
+function renderSupergroups() {
+  if (!refs.supergroupsList || !refs.createSupergroupBtn || !refs.supergroupForm) return;
+
+  refs.supergroupsList.innerHTML = "";
+
+  const visible = refs.supergroupForm.style.display !== "none";
+  refs.createSupergroupBtn.textContent = visible ? "Cancel" : "New supergroup";
+
+  if (visible && state.groups.length) {
+    refs.supergroupOptions.innerHTML = state.groups.map((g) =>
+      `<button class="sg-chip" data-sg-group="${g.id}" type="button">${escapeHtml(g.name)}</button>`
+    ).join("");
+  }
+
+  for (const sg of state.supergroups) {
+    const containedGroups = sg.groupIds
+      .map((gid) => state.groups.find((g) => g.id === gid))
+      .filter(Boolean);
+
+    const allExts = installedExtensions.filter((ext) =>
+      containedGroups.some((cg) => state.assignments[ext.id] === cg.id)
+    );
+    const count = allExts.length;
+    const enabledCount = allExts.filter((e) => e.enabled).length;
+    const powerClass = getPowerClass(count, enabledCount);
+    const groupNames = containedGroups.map((g) => g.name).join(", ");
+
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.style.gridTemplateColumns = "1fr 28px 28px";
+    chip.innerHTML = `
+      <button class="chip-filter" title="${escapeHtml(groupNames)}" type="button">
+        ${escapeHtml(sg.name)} (${containedGroups.length}g / ${count}e)
+      </button>
+      <button class="chip-bulk icon-btn power ${powerClass}" data-bulk-supergroup="${sg.id}" type="button" aria-label="Toggle ${escapeHtml(sg.name)}" title="Toggle supergroup">
+        ${POWER_ICON}
+      </button>
+      <button class="chip-delete" data-delete-supergroup="${sg.id}" type="button" aria-label="Delete supergroup ${escapeHtml(sg.name)}">X</button>
+    `;
+    refs.supergroupsList.append(chip);
   }
 }
 
@@ -751,6 +873,26 @@ refs.groupsList.addEventListener("click", async (event) => {
   const scope = bulkBtn.dataset.bulkToggle;
   await toggleGroupExtensions(scope);
 });
+
+async function toggleSupergroup(sgId) {
+  const sg = state.supergroups.find((s) => s.id === sgId);
+  if (!sg) return;
+
+  const extIds = new Set();
+  for (const gid of sg.groupIds) {
+    for (const [eid, groupId] of Object.entries(state.assignments)) {
+      if (groupId === gid) extIds.add(eid);
+    }
+  }
+  const exts = installedExtensions.filter((e) => extIds.has(e.id));
+  const shouldEnable = !exts.every((e) => e.enabled);
+  await safeToggleMany(exts, shouldEnable);
+  await reloadExtensionsOnly();
+  renderGroups();
+  renderSupergroups();
+  renderExtensionRows();
+  showToast(`Supergroup "${sg.name}" ${shouldEnable ? "enabled" : "disabled"}`);
+}
 
 async function toggleGroupExtensions(scope) {
   let targetExtensions = installedExtensions;

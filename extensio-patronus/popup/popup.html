@@ -48,6 +48,20 @@
           <div id="groupsList" class="chips"></div>
         </section>
 
+        <section class="card supergroups">
+          <h2>Supergroups</h2>
+          <p class="section-desc">Group several groups together and toggle them all at once.</p>
+          <div class="supergroup-actions">
+            <button id="createSupergroupBtn" type="button">New supergroup</button>
+          </div>
+          <div id="supergroupForm" class="supergroup-form" style="display:none">
+            <input id="supergroupName" type="text" maxlength="32" placeholder="Supergroup name" aria-label="Supergroup name" />
+            <div id="supergroupOptions" class="supergroup-options"></div>
+            <button id="confirmSupergroupBtn" type="button">Create</button>
+          </div>
+          <div id="supergroupsList" class="chips"></div>
+        </section>
+
         <section class="card extensions">
           <h2>Extensions</h2>
           <p class="section-desc">Filter by name or alias, sort to reorder. Toggle or open options for each extension.</p>

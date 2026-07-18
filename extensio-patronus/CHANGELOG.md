@@ -6,15 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
-## [1.2.3]
+## [1.2.4]
 
 ### Added
 
-- **Drag and drop**: drag an extension row onto a group chip to assign it instantly. A "Drop here to remove group" zone lets you unassign by dragging there too.
+- **Drag and drop**: drag an extension row onto a group chip to assign it instantly.
+- **Supergroups**: group several groups together and toggle them all at once. Each supergroup shows the number of contained groups and extensions.
 
 ### Changed
 
-- **Cards merged**: "New group" and "Groups" unified into a single card; "Search extension" and the extensions table merged into an "Extensions" card. Cleaner layout, less visual noise.
+- Drag & drop info added to the Info tab shortcuts list.
+
+### Removed
+
+- "Drop here to remove group" zone (use the dropdown to unassign instead).
+
+---
+
+## [1.2.3]
+
+### Changed
+
+- **Cards merged**: "New group" and "Groups" unified into a single card; "Search extension" and the extensions table merged into an "Extensions" card.
 - Spacing standardized across all form rows, snapshot actions, and snapshot list items.
 
 ---
