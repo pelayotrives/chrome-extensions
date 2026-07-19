@@ -39,6 +39,20 @@ Extensio Patronus fixes that with groups, supergroups, snapshots, search, and on
 - Save a clean “recording / demo” snapshot with distractions disabled.
 - Jump back to a previous setup in one click after testing or debugging.
 
+## Visuals
+
+### Promotional Tile
+
+![Extensio Patronus promotional tile](./screenshots/promotional-tile-image.png)
+
+### Screenshots
+
+![Screenshot 1](./screenshots/screenshot-1.png)
+
+![Screenshot 2](./screenshots/screenshot-2.png)
+
+![Screenshot 3](./screenshots/screenshot-3.png)
+
 ## Privacy
 
 Extensio Patronus is local-first.
