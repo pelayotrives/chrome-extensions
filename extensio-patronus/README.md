@@ -83,4 +83,4 @@ Extensio Patronus is designed around those platform limits.
 
 ## Status
 
-Actively being polished for Chrome Web Store release.
+Submission pending
