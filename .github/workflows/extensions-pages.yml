@@ -1,0 +1,55 @@
+name: extensions pages
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "*/docs/**"
+      - ".github/workflows/extensions-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup pages
+        uses: actions/configure-pages@v5
+
+      - name: prepare site
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/index.html
+
+          for extension_dir in */docs; do
+            [ -d "$extension_dir" ] || continue
+            extension_name="${extension_dir%/docs}"
+            mkdir -p "_site/$extension_name"
+            cp -R "$extension_dir"/. "_site/$extension_name/"
+          done
+
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: deploy to github pages
+        id: deployment
+        uses: actions/deploy-pages@v4
