@@ -67,7 +67,7 @@ The extension stores its configuration locally in your browser using `chrome.sto
 
 Read the full privacy policy here:
 
-- [PRIVACY_POLICY.md](./PRIVACY_POLICY.md)
+- [Privacy policy](https://pelayotrives.github.io/chrome-extensions/extensio-patronus/privacy/)
 
 ## Permissions Used
 
