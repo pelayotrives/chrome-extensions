@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy policy | Extensio Patronus</title>
+    <link rel="icon" type="image/png" href="../../icons/icon-32.png" />
+    <meta
+      name="description"
+      content="Privacy policy for Extensio Patronus, a Chrome extension that organizes, toggles, and restores extension setups locally in your browser."
+    />
+    <style>
+      :root {
+        --bg: #0d0d0d;
+        --panel: #171717;
+        --panel-2: #202020;
+        --ink: #e8e8e8;
+        --muted: #a0a0a0;
+        --line: #2f2f2f;
+        --accent: #6b8fa3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(107, 143, 163, 0.16), transparent 24%),
+          linear-gradient(180deg, #0d0d0d 0%, #111111 100%);
+        color: var(--ink);
+        font-family: "JetBrains Mono", "IBM Plex Sans", "Consolas", sans-serif;
+        line-height: 1.65;
+      }
+
+      .shell {
+        width: min(860px, calc(100vw - 32px));
+        margin: 48px auto;
+        padding: 0 0 40px;
+      }
+
+      .hero {
+        padding: 24px 24px 18px;
+        border: 1px solid var(--line);
+        border-radius: 18px 18px 0 0;
+        background: rgba(23, 23, 23, 0.94);
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(30px, 5vw, 42px);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .policy {
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-top: 0;
+        border-radius: 0 0 18px 18px;
+        background: rgba(23, 23, 23, 0.9);
+      }
+
+      h2 {
+        margin: 28px 0 10px;
+        font-size: 20px;
+      }
+
+      h3 {
+        margin: 22px 0 8px;
+        font-size: 16px;
+      }
+
+      p,
+      li {
+        font-size: 14px;
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+
+      code {
+        padding: 1px 5px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--panel-2);
+        color: var(--ink);
+        font-family: inherit;
+        font-size: 13px;
+      }
+
+      .footer {
+        margin-top: 28px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      a {
+        color: #d8e4eb;
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          margin: 20px auto;
+        }
+
+        .hero,
+        .policy {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <h1>Privacy policy</h1>
+        <p>Last updated: July 19, 2026</p>
+      </section>
+
+      <article class="policy">
+        <h2>Overview</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          Extensio Patronus is designed to work locally in your browser.
+        </p>
+        <p>
+          The extension does not require account creation, does not use analytics,
+          does not send your extension configuration to external servers, and does
+          not sell or share personal data.
+        </p>
+
+        <h2>What data the extension accesses</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          To function correctly, Extensio Patronus reads limited extension metadata
+          from your browser through Chrome's extension management APIs, such as:
+        </p>
+        <ul>
+          <li>extension name</li>
+          <li>extension ID</li>
+          <li>enabled or disabled status</li>
+          <li>available options page or homepage URL</li>
+          <li>extension icon metadata exposed by Chrome</li>
+        </ul>
+        <p>
+          This information is used only to render and control your extensions
+          inside the popup.
+        </p>
+
+        <h2>What data the extension stores</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          Extensio Patronus stores configuration locally in
+          <code>chrome.storage.local</code>, including:
+        </p>
+        <ul>
+          <li>custom groups</li>
+          <li>supergroups</li>
+          <li>extension-to-group assignments</li>
+          <li>local aliases you assign to extensions</li>
+          <li>snapshots of extension states</li>
+        </ul>
+        <p>
+          This stored data remains on your machine, inside your browser profile,
+          unless you explicitly export it as a JSON file.
+        </p>
+
+        <h2>Exported files</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          If you use the export feature, Extensio Patronus generates a JSON file
+          containing the configuration you chose to export.
+        </p>
+        <p>
+          That file is created only at your request and is saved under your
+          control. Once exported, its handling depends on where you store, copy,
+          or share it.
+        </p>
+
+        <h2>What the extension does not do</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>Extensio Patronus does not:</p>
+        <ul>
+          <li>collect account details</li>
+          <li>collect payment information</li>
+          <li>collect browsing history</li>
+          <li>record page contents</li>
+          <li>track keystrokes</li>
+          <li>sync data to a remote server</li>
+          <li>send telemetry or analytics events</li>
+          <li>use advertising SDKs</li>
+          <li>sell personal information</li>
+        </ul>
+
+        <h2>Permissions and why they are needed</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <h3><code>management</code></h3>
+        <p>
+          Used to list installed extensions and enable or disable them from the
+          popup.
+        </p>
+
+        <h3><code>storage</code></h3>
+        <p>
+          Used to save your local configuration, including groups, aliases,
+          supergroups, and snapshots.
+        </p>
+
+        <h3><code>tabs</code></h3>
+        <p>
+          Used to open extension options pages or relevant extension-related pages
+          when you request them.
+        </p>
+
+        <h2>Data sharing</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>Extensio Patronus does not share your data with third parties.</p>
+
+        <h2>Data retention</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>Your stored configuration remains in your local browser storage until:</p>
+        <ul>
+          <li>you delete it yourself</li>
+          <li>you remove the extension</li>
+          <li>you clear the relevant browser storage</li>
+        </ul>
+
+        <h2>Children’s privacy</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          Extensio Patronus is not directed to children and does not knowingly
+          collect personal information from children.
+        </p>
+
+        <h2>Security</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          The extension is intentionally designed to minimize data handling by
+          keeping configuration local whenever possible. However, no software
+          environment can guarantee absolute security.
+        </p>
+
+        <h2>Changes to this policy</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          This policy may be updated if the extension’s functionality or data
+          practices change. The latest version of the policy should be published
+          alongside the project and any store listing used for distribution.
+        </p>
+
+        <h2>Contact</h2>
+        <hr style="border: 1px solid var(--line);" />
+        <p>
+          For privacy questions or requests related to Extensio Patronus, contact:
+        </p>
+        <p>
+          Pelayo Trives<br />
+          <a href="mailto:pelayotrivespozuelo@gmail.com">pelayotrivespozuelo@gmail.com</a>
+        </p>
+
+        <p class="footer">
+          Source repository policy:
+          <a href="https://github.com/pelayotrives/chrome-extensions/tree/main/extensio-patronus" rel="noopener noreferrer">github repository</a>
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
