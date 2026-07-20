@@ -97,4 +97,4 @@ Extensio Patronus is designed around those platform limits.
 
 ## Status
 
-Submission pending
+[Now available on Chrome Web Store](https://chromewebstore.google.com/detail/extensio-patronus)
