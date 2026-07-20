@@ -1028,7 +1028,12 @@ function renderSnapshots() {
   refs.snapshotsList.innerHTML = "";
 
   if (!state.snapshots.length) {
-    refs.snapshotsList.innerHTML = "<p class=\"snap-empty\">No snapshots saved yet.</p>";
+    refs.snapshotsList.innerHTML = `
+      <div class="empty-state">
+        <p class="empty-state-title">No snapshots yet</p>
+        <p class="empty-state-text">Save your current extension setup to capture groups, assignments, aliases, and enabled states in one restorable snapshot.</p>
+      </div>
+    `;
     return;
   }
 

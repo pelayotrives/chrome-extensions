@@ -2,7 +2,16 @@
 
 All notable changes to Extensio Patronus are documented in this file.
 
-This project now tracks releases as patch-only versions, with the newest entry first for easier maintenance.
+This project now tracks releases with the newest entry first for easier maintenance.
+
+---
+
+## [0.1.0]
+
+### Changed
+
+- Snapshot empty state now matches the shared dashed empty-state layout used by groups and supergroups.
+- Version bumped to the first minor release and now appears in the popup footer through the existing manifest-driven label.
 
 ---
 
