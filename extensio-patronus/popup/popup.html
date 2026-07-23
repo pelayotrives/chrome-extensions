@@ -40,17 +40,21 @@
         <section class="card groups">
           <h2>Groups</h2>
           <p class="section-desc">Create custom groups to organize your extensions. Click a group to filter, use the power button to toggle all its extensions.</p>
-          <div class="inline-form">
+          <output id="groupsHint" class="meta groups-hint" aria-live="polite" aria-atomic="true"></output>
+          <div id="groupsList" class="chips"></div>
+          <div class="section-manage">
+            <button id="toggleGroupFormBtn" type="button">New group</button>
+          </div>
+          <div id="groupForm" class="inline-form inline-form-collapsible" style="display:none">
             <input id="groupName" type="text" maxlength="32" placeholder="e.g. Work" aria-label="New group name" />
             <button id="createGroupBtn" type="button">Create</button>
           </div>
-          <output id="groupsHint" class="meta groups-hint" aria-live="polite" aria-atomic="true"></output>
-          <div id="groupsList" class="chips"></div>
         </section>
 
         <section class="card supergroups">
           <h2>Supergroups</h2>
           <p class="section-desc">Group several groups together and toggle them all at once.</p>
+          <div id="supergroupsList" class="chips"></div>
           <div class="supergroup-actions">
             <button id="createSupergroupBtn" type="button">New supergroup</button>
           </div>
@@ -59,7 +63,6 @@
             <div id="supergroupOptions" class="supergroup-options"></div>
             <button id="confirmSupergroupBtn" class="sg-btn" type="button">Create</button>
           </div>
-          <div id="supergroupsList" class="chips"></div>
         </section>
 
         <section class="card extensions">
@@ -73,6 +76,7 @@
               <option value="enabled-first">Enabled first</option>
               <option value="disabled-first">Disabled first</option>
             </select>
+            <button id="saveSnapshotShortcutBtn" class="snapshot-shortcut-btn" type="button">Snapshot</button>
           </div>
           <div class="table-head">
             <span>Extension</span>
@@ -89,7 +93,7 @@
           <h2>Snapshots</h2>
           <p class="section-desc">Save and restore the full state: groups, assignments, aliases, and on/off status of each extension.</p>
           <div class="snapshot-actions">
-            <button id="saveSnapshotBtn" type="button">Save current state</button>
+            <button id="saveSnapshotBtn" type="button">Snapshot</button>
           </div>
           <div id="snapshotsList" class="snapshot-list"></div>
         </section>
@@ -106,7 +110,7 @@
           </div>
 
           <div class="info-block">
-            <h3>How it works</h3>
+            <h2 class="settings-subtitle">How it works</h2>
             <ol class="info-steps">
               <li><strong>Create groups</strong> to match your workflows. Call them Work, Dev, AI, Writing, whatever fits.</li>
               <li><strong>Assign each extension</strong> to a group using the dropdown next to its name, or drag and drop it onto a group chip.</li>
@@ -117,7 +121,7 @@
           </div>
 
           <div class="info-block">
-            <h3>Keyboard shortcuts</h3>
+            <h2 class="settings-subtitle">Keyboard shortcuts</h2>
             <div class="shortcut-grid">
               <div><kbd>/</kbd> Focus search</div>
               <div><kbd>Esc</kbd> Clear filters</div>
@@ -127,14 +131,21 @@
               <div><kbd>Right click</kbd> Edit supergroup groups</div>
               <div><kbd>Drag row</kbd> Drop on chip to assign</div>
             </div>
+            <div class="info-subsection">
+              <h3>Power colors</h3>
+              <div class="power-legend">
+                <span class="legend-dot on">All enabled</span>
+                <span class="legend-dot mixed">Some on, some off</span>
+                <span class="legend-dot off">All disabled</span>
+              </div>
+            </div>
           </div>
 
           <div class="info-block">
-            <h3>Power colors</h3>
-            <div class="power-legend">
-              <span class="legend-dot on">All enabled</span>
-              <span class="legend-dot mixed">Some on, some off</span>
-              <span class="legend-dot off">All disabled</span>
+            <h2 class="settings-subtitle">Avada Kedavra</h2>
+            <p class="section-desc">Delete every saved group, supergroup, snapshot and alias in one go, and clear group assignments so everything goes back to its default setup.</p>
+            <div class="settings-actions">
+              <button id="resetConfigurationBtn" class="btn-danger-outline" type="button">Restore default setup</button>
             </div>
           </div>
           <div class="info-block">

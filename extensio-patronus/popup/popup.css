@@ -170,7 +170,7 @@ body {
 
 .search-row {
   display: grid;
-  grid-template-columns: 1fr 100px;
+  grid-template-columns: 1fr 100px 100px;
   gap: 8px;
   margin: 4px 0 12px;
 }
@@ -178,6 +178,10 @@ body {
 .sort-select {
   height: var(--control-h);
   min-height: var(--control-h);
+}
+
+.snapshot-shortcut-btn {
+  height: var(--control-h);
 }
 
 .snapshot-actions {
@@ -310,6 +314,10 @@ select {
   margin: 4px 0 12px;
 }
 
+.inline-form-collapsible {
+  margin: 8px 0 0;
+}
+
 button {
   border: 1px solid var(--line-2);
   border-radius: 6px;
@@ -334,6 +342,11 @@ button:hover {
   margin: 0 0 8px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.section-manage,
+.supergroup-actions {
+  margin-top: 10px;
 }
 
 .chip {
@@ -406,14 +419,10 @@ button:hover {
   font-weight: 400;
 }
 
-.supergroup-actions {
-  margin: 4px 0 8px;
-}
-
 .supergroup-form {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
+  margin-top: 8px;
   padding: 10px;
   background: var(--panel-2);
   border-radius: 6px;
@@ -817,6 +826,16 @@ button:hover {
   color: #e88;
 }
 
+.btn-danger-outline {
+  background: rgba(180, 40, 40, 0.12);
+  border-color: rgba(220, 60, 60, 0.38);
+  color: #ff9b9b;
+}
+
+.btn-danger-outline:hover {
+  background: rgba(180, 40, 40, 0.18);
+}
+
 .status-msg {
   margin: 0 0 8px;
   font-size: 11px;
@@ -884,6 +903,17 @@ button:hover {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
+}
+
+.settings-subtitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.info-subsection {
+  margin-top: 10px;
 }
 
 .shortcut-grid {

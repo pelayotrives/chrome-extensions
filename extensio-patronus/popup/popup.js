@@ -2,8 +2,11 @@ const STORAGE_KEY = "hubState";
 
 const refs = {
   saveSnapshotBtn: document.getElementById("saveSnapshotBtn"),
+  saveSnapshotShortcutBtn: document.getElementById("saveSnapshotShortcutBtn"),
   snapshotLimitHint: document.getElementById("snapshotLimitHint"),
   snapshotsList: document.getElementById("snapshotsList"),
+  toggleGroupFormBtn: document.getElementById("toggleGroupFormBtn"),
+  groupForm: document.getElementById("groupForm"),
   createGroupBtn: document.getElementById("createGroupBtn"),
   groupName: document.getElementById("groupName"),
   groupsList: document.getElementById("groupsList"),
@@ -22,6 +25,7 @@ const refs = {
   importProgressText: document.getElementById("importProgressText"),
   importProgressValue: document.getElementById("importProgressValue"),
   importRingProgress: document.getElementById("importRingProgress"),
+  resetConfigurationBtn: document.getElementById("resetConfigurationBtn"),
   createSupergroupBtn: document.getElementById("createSupergroupBtn"),
   supergroupForm: document.getElementById("supergroupForm"),
   supergroupName: document.getElementById("supergroupName"),
@@ -51,6 +55,7 @@ let groupClickTimer = null;
 let pendingDeleteGroupId = null;
 let pendingDeleteSnapshotId = null;
 let pendingDeleteSupergroupId = null;
+let pendingResetConfiguration = false;
 let statusTimeoutId = null;
 let sortMode = "az";
 
@@ -94,12 +99,14 @@ async function init() {
 
 function wireEvents() {
   refs.saveSnapshotBtn.addEventListener("click", handleSaveSnapshot);
+  refs.saveSnapshotShortcutBtn?.addEventListener("click", handleSaveSnapshot);
   refs.createGroupBtn.addEventListener("click", handleCreateGroup);
   refs.searchInput.addEventListener("input", renderExtensionRows);
   refs.sortOrder.addEventListener("change", () => {
     sortMode = refs.sortOrder.value;
     renderExtensionRows();
   });
+  refs.toggleGroupFormBtn?.addEventListener("click", toggleGroupForm);
 
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => switchTab(tab.dataset.tab));
@@ -165,6 +172,16 @@ function wireEvents() {
     renderSupergroups();
   });
 
+  refs.resetConfigurationBtn?.addEventListener("click", () => {
+    pendingDeleteGroupId = null;
+    pendingDeleteSnapshotId = null;
+    pendingDeleteSupergroupId = null;
+    pendingResetConfiguration = true;
+    refs.confirmTitle.textContent = "Restore default setup";
+    refs.confirmText.textContent = "Restore the default setup by deleting all groups, supergroups, snapshots and aliases? This action cannot be undone.";
+    refs.confirmModal.showModal();
+  });
+
   refs.supergroupOptions.addEventListener("click", (event) => {
     const chip = event.target.closest(".sg-chip");
     if (!chip) return;
@@ -174,6 +191,10 @@ function wireEvents() {
   refs.confirmSupergroupBtn.addEventListener("click", async () => {
     const name = refs.supergroupName.value.trim();
     if (!name) return;
+    if (hasDuplicateName(state.supergroups, name, editingSupergroupId)) {
+      showDuplicateNameToast("supergroup", name);
+      return;
+    }
     const activeChips = refs.supergroupOptions.querySelectorAll(".sg-chip.active");
     const groupIds = [...activeChips].map((c) => c.dataset.sgGroup);
     if (!groupIds.length) return;
@@ -233,6 +254,7 @@ function wireEvents() {
 
       pendingDeleteGroupId = null;
       pendingDeleteSnapshotId = null;
+      pendingResetConfiguration = false;
       pendingDeleteSupergroupId = sgId;
       refs.confirmTitle.textContent = "Delete supergroup";
       refs.confirmText.textContent = `Delete supergroup "${sg.name}"? This action cannot be undone.`;
@@ -285,6 +307,8 @@ function wireEvents() {
 
     pendingDeleteGroupId = group.id;
     pendingDeleteSnapshotId = null;
+    pendingDeleteSupergroupId = null;
+    pendingResetConfiguration = false;
     refs.confirmTitle.textContent = "Delete group";
     refs.confirmText.textContent = `Delete group "${group.name}" and clear related assignments? This action cannot be undone.`;
     refs.confirmModal.showModal();
@@ -296,11 +320,32 @@ function wireEvents() {
     const deletingGroup = pendingDeleteGroupId;
     const deletingSnapshot = pendingDeleteSnapshotId;
     const deletingSupergroup = pendingDeleteSupergroupId;
+    const resettingConfiguration = pendingResetConfiguration;
 
     pendingDeleteGroupId = null;
     pendingDeleteSnapshotId = null;
     pendingDeleteSupergroupId = null;
+    pendingResetConfiguration = false;
     closeDeleteModal();
+
+    if (resettingConfiguration) {
+      state.groups = [];
+      state.supergroups = [];
+      state.snapshots = [];
+      state.assignments = {};
+      state.aliases = {};
+      activeGroupFilter = "all";
+      activeSupergroupFilter = null;
+      editingSupergroupId = null;
+      refs.groupName.value = "";
+      refs.supergroupName.value = "";
+      refs.groupForm.style.display = "none";
+      refs.supergroupForm.style.display = "none";
+      await saveState();
+      renderAll();
+      showToast("Configuration reset", "danger");
+      return;
+    }
 
     if (deletingSupergroup) {
       const sgName = state.supergroups.find((s) => s.id === deletingSupergroup)?.name || "Supergroup";
@@ -426,6 +471,8 @@ function wireEvents() {
 
       pendingDeleteGroupId = null;
       pendingDeleteSnapshotId = snapshotId;
+      pendingDeleteSupergroupId = null;
+      pendingResetConfiguration = false;
       refs.confirmTitle.textContent = "Delete snapshot";
       refs.confirmText.textContent = `Delete snapshot "${snapshot.name}"? This action cannot be undone.`;
       refs.confirmModal.showModal();
@@ -463,7 +510,16 @@ function wireEvents() {
       if (done) return;
       done = true;
       const newName = input.value.trim();
-      if (newName) group.name = newName;
+      if (newName) {
+        if (hasDuplicateName(state.groups, newName, group.id)) {
+          showDuplicateNameToast("group", newName);
+          renderGroups();
+          renderSupergroups();
+          renderExtensionRows();
+          return;
+        }
+        group.name = newName;
+      }
       await saveState();
       renderGroups();
       renderSupergroups();
@@ -505,7 +561,14 @@ function wireEvents() {
       if (done) return;
       done = true;
       const newName = input.value.trim();
-      if (newName) sg.name = newName;
+      if (newName) {
+        if (hasDuplicateName(state.supergroups, newName, sg.id)) {
+          showDuplicateNameToast("supergroup", newName);
+          renderSupergroups();
+          return;
+        }
+        sg.name = newName;
+      }
       await saveState();
       renderSupergroups();
     };
@@ -526,10 +589,10 @@ async function handleCreateGroup() {
   const rawName = refs.groupName.value.trim();
   if (!rawName) return;
 
-  const duplicate = state.groups.some(
-    (group) => group.name.toLowerCase() === rawName.toLowerCase()
-  );
-  if (duplicate) return;
+  if (hasDuplicateName(state.groups, rawName)) {
+    showDuplicateNameToast("group", rawName);
+    return;
+  }
 
   state.groups.push({
     id: crypto.randomUUID(),
@@ -537,9 +600,24 @@ async function handleCreateGroup() {
   });
 
   refs.groupName.value = "";
+  refs.groupForm.style.display = "none";
+  refs.toggleGroupFormBtn.textContent = "New group";
   await saveState();
   renderAll();
   showToast(`Group "${rawName}" created`, "success");
+}
+
+function toggleGroupForm() {
+  if (!refs.groupForm || !refs.toggleGroupFormBtn) return;
+  const visible = refs.groupForm.style.display !== "none";
+  refs.groupForm.style.display = visible ? "none" : "grid";
+  refs.toggleGroupFormBtn.textContent = visible ? "New group" : "Cancel";
+  if (!visible) {
+    refs.groupName.focus();
+    refs.groupName.select();
+  } else {
+    refs.groupName.value = "";
+  }
 }
 
 async function handleSaveSnapshot() {
@@ -548,14 +626,12 @@ async function handleSaveSnapshot() {
     return;
   }
 
-  const index = state.snapshots.length + 1;
-
   const extensionStates = {};
   for (const ext of installedExtensions) {
     extensionStates[ext.id] = ext.enabled;
   }
 
-  const name = `Snapshot ${index}`;
+  const name = getNextSnapshotName();
 
   const snapshotId = crypto.randomUUID();
 
@@ -620,6 +696,11 @@ function startSnapshotRename(nameNode, snapshot) {
 
     const value = input.value.trim();
     if (value) {
+      if (hasDuplicateName(state.snapshots, value, snapshot.id)) {
+        showDuplicateNameToast("snapshot", value);
+        renderSnapshots();
+        return;
+      }
       snapshot.name = value;
     }
 
@@ -843,6 +924,31 @@ function sanitizeAliases(rawAliases, extensionIds) {
   return result;
 }
 
+function normalizeName(value) {
+  return value.trim().toLocaleLowerCase("en");
+}
+
+function hasDuplicateName(items, name, excludeId = null) {
+  const normalized = normalizeName(name);
+  return items.some((item) => item.id !== excludeId && normalizeName(item.name) === normalized);
+}
+
+function showDuplicateNameToast(entityLabel, name) {
+  showToast(`A ${entityLabel} named "${name}" already exists`, "danger");
+}
+
+function getNextSnapshotName() {
+  let index = state.snapshots.length + 1;
+  let candidate = `Snapshot ${index}`;
+
+  while (hasDuplicateName(state.snapshots, candidate)) {
+    index += 1;
+    candidate = `Snapshot ${index}`;
+  }
+
+  return candidate;
+}
+
 function validateImportConfigPayload(data) {
   const topLevelKeys = ["groups", "supergroups", "assignments", "aliases", "exportedAt"];
 
@@ -1060,6 +1166,11 @@ function renderSnapshots() {
 
 function renderGroups() {
   if (!refs.groupsList) return;
+
+  if (refs.toggleGroupFormBtn && refs.groupForm) {
+    const visible = refs.groupForm.style.display !== "none";
+    refs.toggleGroupFormBtn.textContent = visible ? "Cancel" : "New group";
+  }
 
   refs.groupsList.innerHTML = "";
 
@@ -1598,6 +1709,7 @@ function closeDeleteModal() {
   pendingDeleteGroupId = null;
   pendingDeleteSnapshotId = null;
   pendingDeleteSupergroupId = null;
+  pendingResetConfiguration = false;
 }
 
 async function openBestPageForExtension(extension) {
